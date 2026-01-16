@@ -1,0 +1,20 @@
+{
+  "name": "@my-app/cli",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "bin": {
+    "my-app": "./bin/my-app.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\"",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@my-app/shared": "^0.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@my-app/web",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "node -e \"import('node:fs').then(fs=>{fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('.vite',{recursive:true,force:true});})\""
+  },
+  "dependencies": {
+    "@my-app/shared": "^0.0.0"
+    
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "typescript": "^5.8.0"
+  }
+}
