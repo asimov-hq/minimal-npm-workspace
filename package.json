@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "@asimov/minimal-workspace",
   "private": true,
   "type": "module",
   "workspaces": [

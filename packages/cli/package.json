@@ -1,5 +1,5 @@
 {
-  "name": "@my-app/cli",
+  "name": "@asimov/minimal-cli",
   "private": true,
   "type": "module",
   "version": "0.0.0",
@@ -15,6 +15,6 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@my-app/shared": "^0.0.0"
+    "@asimov/minimal-shared": "^0.0.0"
   }
 }
