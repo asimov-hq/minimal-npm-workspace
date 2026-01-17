@@ -1,3 +1,3 @@
-import { hello } from "@my-app/shared";
+import { hello } from "@asimov/minimal-shared";
 
 console.log("[cli]", hello("world"));

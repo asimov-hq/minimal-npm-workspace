@@ -12,10 +12,10 @@
     "build": "npm run -ws build",
     "typecheck": "npm run -ws typecheck",
     "clean": "npm run -ws clean",
-    "dev:server": "npm run -w @my-app/server dev",
-    "dev:web": "npm run -w @my-app/web dev",
-    "start:server": "npm run -w @my-app/server start",
-    "start:cli": "npm run -w @my-app/cli start"
+    "dev:server": "npm run -w @asimov/minimal-server dev",
+    "dev:web": "npm run -w @asimov/minimal-web dev",
+    "start:server": "npm run -w @asimov/minimal-server start",
+    "start:cli": "npm run -w @asimov/minimal-cli start"
   },
   "devDependencies": {
     "@types/node": "^25.0.8",
