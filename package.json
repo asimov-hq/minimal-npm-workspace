@@ -13,6 +13,7 @@
     "typecheck": "npm run -ws typecheck",
     "clean": "npm run -ws clean",
     "dev:shared": "npm run -w @asimov/minimal-shared dev",
+    "dev:app": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\" \"npm run -w @asimov/minimal-web dev\"",
     "dev:server": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\"",
     "dev:web": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-web dev\"",
     "dev:cli": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,cli \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-cli dev\"",
