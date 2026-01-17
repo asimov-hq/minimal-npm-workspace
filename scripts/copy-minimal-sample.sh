@@ -65,21 +65,31 @@ fail_if_exists() {
 }
 
 if ! $overwrite; then
-  if fail_if_exists "$dest/.gitignore" \
-     || fail_if_exists "$dest/tsconfig.base.json" \
-     || fail_if_exists "$dest/package.json"; then
-    echo "Error: destination already contains one of the target files. Use --overwrite to replace." >&2
-    exit 1
+  existing=()
+
+  if fail_if_exists "$dest/.gitignore"; then
+    existing+=(".gitignore")
+  fi
+  if fail_if_exists "$dest/tsconfig.base.json"; then
+    existing+=("tsconfig.base.json")
+  fi
+  if fail_if_exists "$dest/package.json"; then
+    existing+=("package.json")
   fi
 
-  if [[ -d "$dest/packages" ]]; then
-    for entry in "$src_packages_dir"/*; do
-      name="$(basename "$entry")"
-      if fail_if_exists "$dest/packages/$name"; then
-        echo "Error: destination already contains packages/$name. Use --overwrite to replace." >&2
-        exit 1
-      fi
+  while IFS= read -r rel_path; do
+    if fail_if_exists "$dest/$rel_path"; then
+      existing+=("$rel_path")
+    fi
+  done < <(cd "$src_packages_dir" && find . -type f -print | sed 's|^\./|packages/|')
+
+  if [[ ${#existing[@]} -gt 0 ]]; then
+    echo "Error: destination already contains the following files:" >&2
+    for item in "${existing[@]}"; do
+      echo "  - $item" >&2
     done
+    echo "Use --overwrite to replace." >&2
+    exit 1
   fi
 else
   rm -f "$dest/.gitignore" "$dest/tsconfig.base.json" "$dest/package.json"
@@ -99,3 +109,11 @@ mkdir -p "$dest/packages"
 for entry in "$src_packages_dir"/*; do
   cp -R "$entry" "$dest/packages/"
 done
+
+echo "Copied files:"
+echo "  - .gitignore"
+echo "  - tsconfig.base.json"
+echo "  - package.json"
+while IFS= read -r rel_path; do
+  echo "  - $rel_path"
+done < <(cd "$src_packages_dir" && find . -type f -print | sed 's|^\./|packages/|')
