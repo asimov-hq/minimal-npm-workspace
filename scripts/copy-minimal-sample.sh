@@ -81,7 +81,14 @@ if ! $overwrite; then
     if fail_if_exists "$dest/$rel_path"; then
       existing+=("$rel_path")
     fi
-  done < <(cd "$src_packages_dir" && find . -type f -print | sed 's|^\./|packages/|')
+  done < <(
+    cd "$src_packages_dir" && \
+    find . \
+      -path "*/node_modules/*" -prune -o \
+      -path "*/.vite/*" -prune -o \
+      -path "*/dist/*" -prune -o \
+      -type f -print | sed 's|^\./|packages/|'
+  )
 
   if [[ ${#existing[@]} -gt 0 ]]; then
     echo "Error: destination already contains the following files:" >&2
@@ -106,9 +113,14 @@ cp "$src_tsconfig" "$dest/tsconfig.base.json"
 cp "$src_package" "$dest/package.json"
 
 mkdir -p "$dest/packages"
-for entry in "$src_packages_dir"/*; do
-  cp -R "$entry" "$dest/packages/"
-done
+(
+  cd "$src_packages_dir"
+  tar \
+    --exclude="node_modules" \
+    --exclude=".vite" \
+    --exclude="dist" \
+    -cf - .
+) | (cd "$dest/packages" && tar -xf -)
 
 echo "Copied files:"
 echo "  - .gitignore"
@@ -116,4 +128,11 @@ echo "  - tsconfig.base.json"
 echo "  - package.json"
 while IFS= read -r rel_path; do
   echo "  - $rel_path"
-done < <(cd "$src_packages_dir" && find . -type f -print | sed 's|^\./|packages/|')
+done < <(
+  cd "$src_packages_dir" && \
+  find . \
+    -path "*/node_modules/*" -prune -o \
+    -path "*/.vite/*" -prune -o \
+    -path "*/dist/*" -prune -o \
+    -type f -print | sed 's|^\./|packages/|'
+)
