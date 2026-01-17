@@ -1,3 +1,3 @@
 import { hello } from "@asimov/minimal-shared";
 
-console.log("[cli]", hello("world"));
+console.log("(from cli):", hello("world"));
