@@ -12,13 +12,16 @@
     "build": "npm run -ws build",
     "typecheck": "npm run -ws typecheck",
     "clean": "npm run -ws clean",
-    "dev:server": "npm run -w @asimov/minimal-server dev",
-    "dev:web": "npm run -w @asimov/minimal-web dev",
+    "dev:shared": "npm run -w @asimov/minimal-shared dev",
+    "dev:server": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\"",
+    "dev:web": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-web dev\"",
+    "dev:cli": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,cli \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-cli dev\"",
     "start:server": "npm run -w @asimov/minimal-server start",
     "start:cli": "npm run -w @asimov/minimal-cli start"
   },
   "devDependencies": {
     "@types/node": "^25.0.8",
+    "concurrently": "^9.2.0",
     "tsx": "^4.8.1",
     "typescript": "^5.8.0"
   }
