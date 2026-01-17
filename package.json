@@ -13,17 +13,16 @@
     "typecheck": "npm run -ws typecheck",
     "clean": "npm run -ws clean",
     "dev:shared": "npm run -w @asimov/minimal-shared dev",
-    "dev:app": "concurrently -k -s first -n shared,wait,server,web \"npm run -w @asimov/minimal-shared dev\" \"wait-on packages/shared/dist/index.js && node -e \\\"setInterval(()=>{},1<<30)\\\"\" \"npm run -w @asimov/minimal-server dev\" \"npm run -w @asimov/minimal-web dev\"",
-    "dev:server": "concurrently -k -s first -n shared,wait,server \"npm run -w @asimov/minimal-shared dev\" \"wait-on packages/shared/dist/index.js && node -e \\\"setInterval(()=>{},1<<30)\\\"\" \"npm run -w @asimov/minimal-server dev\"",
-    "dev:web": "concurrently -k -s first -n shared,wait,web \"npm run -w @asimov/minimal-shared dev\" \"wait-on packages/shared/dist/index.js && node -e \\\"setInterval(()=>{},1<<30)\\\"\" \"npm run -w @asimov/minimal-web dev\"",
-    "dev:cli": "concurrently -k -s first -n shared,wait,cli \"npm run -w @asimov/minimal-shared dev\" \"wait-on packages/shared/dist/index.js && node -e \\\"setInterval(()=>{},1<<30)\\\"\" \"npm run -w @asimov/minimal-cli dev\"",
+    "dev:app": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\" \"npm run -w @asimov/minimal-web dev\"",
+    "dev:server": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\"",
+    "dev:web": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-web dev\"",
+    "dev:cli": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,cli \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-cli dev\"",
     "start:server": "npm run -w @asimov/minimal-server start",
     "start:cli": "npm run -w @asimov/minimal-cli start"
   },
   "devDependencies": {
     "@types/node": "^25.0.8",
     "concurrently": "^9.2.0",
-    "wait-on": "^7.2.0",
     "tsx": "^4.8.1",
     "typescript": "^5.8.0"
   }
