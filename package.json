@@ -9,21 +9,29 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run -ws build",
-    "typecheck": "npm run -ws typecheck",
+    "build": "tsc -b && npm run -w @asimov/minimal-web build",
+    "build:packages": "npm run -ws build",
+    "build:ts": "tsc -b",
+    "typecheck": "tsc -b --noEmit",
+    "typecheck:packages": "npm run -ws typecheck",
     "clean": "npm run -ws clean",
-    "dev:shared": "npm run -w @asimov/minimal-shared dev",
-    "dev:app": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\" \"npm run -w @asimov/minimal-web dev\"",
-    "dev:server": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,server \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-server dev\"",
-    "dev:web": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,web \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-web dev\"",
-    "dev:cli": "npm run -w @asimov/minimal-shared build && concurrently -k -s first -n shared,cli \"npm run -w @asimov/minimal-shared dev\" \"npm run -w @asimov/minimal-cli dev\"",
+    "dev:ts": "tsc -b -w tsconfig.dev.json",
+    "dev:app": "concurrently -k -s first -n server,web \"npm run -w @asimov/minimal-server dev\" \"npm run dev:web\"",
+    "dev:server": "npm run -w @asimov/minimal-server dev",
+    "dev:web": "npm run -w @asimov/minimal-web dev",
+    "dev:cli": "npm run -w @asimov/minimal-cli dev",
     "start:server": "npm run -w @asimov/minimal-server start",
-    "start:cli": "npm run -w @asimov/minimal-cli start"
+    "start:web": "npm run -w @asimov/minimal-web preview",
+    "start:cli": "npm run -w @asimov/minimal-cli start",
+
+    "lint": "eslint . --cache"
   },
   "devDependencies": {
     "@types/node": "^25.0.8",
     "concurrently": "^9.2.0",
+    "eslint": "^9.39.2",
     "tsx": "^4.8.1",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.53.0"
   }
 }

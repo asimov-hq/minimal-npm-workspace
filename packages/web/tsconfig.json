@@ -4,8 +4,14 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
     "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "paths": {
+      "@asimov/minimal-shared": ["../shared/src"]
+    },
     "types": ["vite/client"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

@@ -5,6 +5,12 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    // "esModuleInterop": true,
+    // "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@asimov/minimal-shared": ["../shared/src"]
+    },
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
