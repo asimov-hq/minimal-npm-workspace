@@ -3,5 +3,6 @@
   "compilerOptions": {
     "noEmit": true,
     "tsBuildInfoFile": "./.tsbuildinfo.dev"
-  }
+  },
+  "references": [{ "path": "../shared/tsconfig.dev.json" }]
 }
