@@ -59,7 +59,7 @@ We need to distinguish between:
    - every additional DOM element is removed
    - main loop should have `0` DOM updates
    - performance monitor may exist only if it updates at a very low cadence
-2. configure / track editor mode
+2. configure / settings mode
    - additional DOM is allowed
    - this mode may carry more UI cost
 
@@ -68,16 +68,29 @@ We need to distinguish between:
 At minimum, record measurements for:
 
 1. game mode, idle
-2. game mode, driving
+2. game mode, scripted driving
 3. configure/settings mode open
+
+Use a deterministic input source for the driving benchmark.
+
+Preferred approach:
+
+- add a simple scripted input replay for one repeatable 10-second lap or driving segment
+
+Reason:
+
+- manual driving is too noisy for before/after comparison
 
 For each scenario, sample at least `10 seconds` and record:
 
 - average FPS
 - average frame time
+- `p95` frame time
 - average physics time
-- average render time
+- average render CPU time
 - whether DOM updates occur in the main loop
+
+Store benchmark results in a simple markdown or json artifact under `docs/sessions/` or another agreed benchmark output path so changes can be compared over time.
 
 ### Improvement Criteria
 
@@ -89,6 +102,33 @@ An optimization counts as useful if it improves one or more of:
 - average render time
 
 without breaking behavior.
+
+### Performance Budget
+
+Target:
+
+- sustained `60 FPS`
+
+Equivalent frame budget:
+
+- about `16.7 ms/frame`
+
+Pass/fail defaults:
+
+- game mode, idle: average at or above `60 FPS`
+- game mode, scripted driving: average at or above `60 FPS`
+- game mode, scripted driving: `p95` frame time should not indicate obvious stutter
+- configure/settings mode: must be cheaper than active game mode
+
+These are pragmatic targets, not laboratory-grade benchmarks.
+
+### Practical Measurement Policy
+
+- measure CPU-side physics time directly
+- measure CPU-side render submission time directly
+- treat GPU/compositor separation as optional
+
+Only dig deeper into GPU/compositor cost if the simpler fixes do not recover enough performance.
 
 ## Optimization Order
 
@@ -108,10 +148,10 @@ Expected payoff:
 
 When on `#/settings`:
 
-- pause or heavily reduce physics updates
-- pause or reduce render frequency if possible
+- pause simulation by default
+- stop route-specific HUD updates
+- render only what is necessary for the settings screen
 - avoid unnecessary HUD updates
-- consider pausing gameplay entirely unless there is a reason to keep it live
 
 Expected payoff:
 
@@ -132,6 +172,7 @@ Targets:
 - separate performance monitor rendering from frame loop
 - update monitor on a slower cadence, defaulting to about once per second and making that configurable
 - avoid rebuilding settings UI after initial render
+- make benchmark mode able to minimize monitor overhead further if needed
 
 Expected payoff:
 
@@ -147,6 +188,8 @@ Check:
 - whether `PHYSICS_SUBSTEPS = 10` is still justified
 - whether route state should influence simulation cadence
 - whether some calculations can be skipped at very low speeds
+- whether per-frame allocations are creating GC spikes
+- whether WebGL submission patterns are doing unnecessary per-frame work
 
 Expected payoff:
 
@@ -163,9 +206,15 @@ Priority note:
 - add `uiUpdateMs`
 - count HUD updates
 - count perf monitor updates
+- count all DOM writes in the main loop
 - log whether the current route is `game` or `settings`
 - add a simple switch to compare blurred vs non-blurred panels
 - add a configurable monitor refresh interval
+
+Implementation note:
+
+- DOM update counting can be approximate
+- it is enough to count intentional writes performed by our code in the main loop
 
 If useful and practical:
 
@@ -180,12 +229,12 @@ This is optional unless it helps reach `60 FPS`.
 - update only text content
 - stop rewriting whole panels every frame
 - ensure real game mode has `0` DOM updates in the main loop
+- reduce text churn as well as structural DOM churn
 
 ### Task Group C: Reduce Settings Route Cost
 
 - define expected behavior on settings route
-- if live game is not required there, pause simulation
-- if the background scene should remain visible, consider low-frequency rendering
+- pause simulation while settings are open
 - distinguish clearly between pure game mode and configure/editor mode
 
 ### Task Group D: Re-test
@@ -221,6 +270,7 @@ Goals:
 
 - measure the effect of `PHYSICS_SUBSTEPS = 10`
 - compare multiple substep counts
+- start with `10`, `8`, `6`, and `4`
 - provide a basis for later optimization work
 
 This should be treated as a real benchmark task, not guesswork.
@@ -237,6 +287,38 @@ Create real tests or repeatable checks for:
 
 Each performance change should be checked against these so speed improvements do not quietly break the app.
 
+Recommended correctness checks:
+
+- route switches correctly between `#/` and `#/settings`
+- selected theme persists across reload
+- keyboard controls still work
+- gamepad controls still work when available
+- FPS monitor still reports real `requestAnimationFrame` cadence
+- driving still feels stable in the scripted benchmark and a short manual smoke test
+
+### Task Group I: Benchmark Mode
+
+Add a low-overhead benchmark mode.
+
+Defaults:
+
+- real game mode only
+- no HUD updates
+- perf monitor updates at most once per second, and ideally can be hidden entirely
+- deterministic scripted driving when measuring active gameplay
+
+Goal:
+
+- reduce measurement noise caused by the monitoring UI itself
+
+### Task Group J: Visibility Policy
+
+When the tab is hidden:
+
+- pause or strongly throttle simulation and rendering
+
+This is a low-complexity optimization and avoids wasting work when the app is not visible.
+
 ## Acceptance Criteria
 
 The performance work is successful when:
@@ -248,6 +330,7 @@ The performance work is successful when:
 - theme selection still works
 - routing still works
 - build and lint remain clean
+- benchmark results are repeatable enough to compare before/after changes
 
 ## Verification Workflow
 
