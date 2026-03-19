@@ -1,27 +1,5 @@
 # Performance Improvement Plan
 
-## Timestamp Format
-
-Use this timestamp format for plan and saved-context filenames:
-
-- `YYYY-MM-DD--HH-MM`
-
-Meaning:
-
-- single `-` separates date or time components
-  - example: `2026-03-19`
-  - example: `14-09`
-- double `--` separates the date part from the time part
-  - example: `2026-03-19--14-09`
-
-Recommended full filename shape:
-
-- `<YYYY-MM-DD--HH-MM>--<tags>.md`
-
-Example:
-
-- `2026-03-19--14-09--performance-improvement-plan.md`
-
 ## Goal
 
 Improve frontend performance without changing the product direction:
