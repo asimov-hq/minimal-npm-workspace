@@ -1,5 +1,30 @@
 type Vec2 = { x: number; y: number };
 type Rect = { x: number; y: number; w: number; h: number };
+type RouteName = "game" | "settings";
+type ThemeName =
+  | "dark"
+  | "light"
+  | "ocean"
+  | "forest"
+  | "volcano"
+  | "purple"
+  | "turquoise"
+  | "orange"
+  | "navy"
+  | "army"
+  | "air force";
+type ThemeDef = {
+  label: string;
+  uiBg: string;
+  uiPanel: string;
+  uiPanelStrong: string;
+  uiText: string;
+  uiMuted: string;
+  uiBorder: string;
+  uiAccent: string;
+  uiAccentText: string;
+  uiShadow: string;
+};
 type InputState = {
   steer: number;
   throttle: number;
@@ -22,58 +47,465 @@ type PerfStats = {
   speed: number;
 };
 
+const themes: Record<ThemeName, ThemeDef> = {
+  dark: {
+    label: "Dark",
+    uiBg: "#120f0c",
+    uiPanel: "rgba(24, 19, 15, 0.76)",
+    uiPanelStrong: "rgba(17, 14, 11, 0.88)",
+    uiText: "#f4ead8",
+    uiMuted: "#ccbda6",
+    uiBorder: "rgba(244, 234, 216, 0.18)",
+    uiAccent: "#c45433",
+    uiAccentText: "#fff2e8",
+    uiShadow: "rgba(0, 0, 0, 0.28)"
+  },
+  light: {
+    label: "Light",
+    uiBg: "#f4efe6",
+    uiPanel: "rgba(255, 251, 244, 0.9)",
+    uiPanelStrong: "rgba(255, 255, 255, 0.95)",
+    uiText: "#2e271f",
+    uiMuted: "#6d6357",
+    uiBorder: "rgba(46, 39, 31, 0.12)",
+    uiAccent: "#267cb3",
+    uiAccentText: "#f7fcff",
+    uiShadow: "rgba(67, 52, 36, 0.14)"
+  },
+  ocean: {
+    label: "Ocean",
+    uiBg: "#091b26",
+    uiPanel: "rgba(11, 33, 47, 0.8)",
+    uiPanelStrong: "rgba(7, 24, 35, 0.9)",
+    uiText: "#dff5ff",
+    uiMuted: "#91b7c9",
+    uiBorder: "rgba(176, 228, 255, 0.22)",
+    uiAccent: "#1da7c9",
+    uiAccentText: "#effcff",
+    uiShadow: "rgba(0, 0, 0, 0.32)"
+  },
+  forest: {
+    label: "Forest",
+    uiBg: "#101d14",
+    uiPanel: "rgba(20, 42, 25, 0.8)",
+    uiPanelStrong: "rgba(14, 30, 18, 0.9)",
+    uiText: "#ebf7e9",
+    uiMuted: "#9ab59b",
+    uiBorder: "rgba(201, 236, 194, 0.2)",
+    uiAccent: "#4eaa5f",
+    uiAccentText: "#f5fff5",
+    uiShadow: "rgba(0, 0, 0, 0.32)"
+  },
+  volcano: {
+    label: "Volcano",
+    uiBg: "#22100d",
+    uiPanel: "rgba(50, 19, 16, 0.82)",
+    uiPanelStrong: "rgba(34, 13, 11, 0.9)",
+    uiText: "#ffe3d9",
+    uiMuted: "#d4a497",
+    uiBorder: "rgba(255, 191, 172, 0.2)",
+    uiAccent: "#df5128",
+    uiAccentText: "#fff4ef",
+    uiShadow: "rgba(0, 0, 0, 0.34)"
+  },
+  purple: {
+    label: "Purple",
+    uiBg: "#1a1025",
+    uiPanel: "rgba(39, 21, 59, 0.82)",
+    uiPanelStrong: "rgba(26, 14, 39, 0.9)",
+    uiText: "#f0e5ff",
+    uiMuted: "#bca7d7",
+    uiBorder: "rgba(225, 205, 255, 0.2)",
+    uiAccent: "#9156ff",
+    uiAccentText: "#f9f4ff",
+    uiShadow: "rgba(0, 0, 0, 0.34)"
+  },
+  turquoise: {
+    label: "Turquoise",
+    uiBg: "#0e2020",
+    uiPanel: "rgba(12, 45, 46, 0.82)",
+    uiPanelStrong: "rgba(8, 31, 32, 0.9)",
+    uiText: "#dffdfb",
+    uiMuted: "#97cac5",
+    uiBorder: "rgba(181, 255, 246, 0.2)",
+    uiAccent: "#22b8b2",
+    uiAccentText: "#efffff",
+    uiShadow: "rgba(0, 0, 0, 0.32)"
+  },
+  orange: {
+    label: "Orange",
+    uiBg: "#26170d",
+    uiPanel: "rgba(58, 31, 12, 0.82)",
+    uiPanelStrong: "rgba(40, 22, 8, 0.9)",
+    uiText: "#fff0dd",
+    uiMuted: "#d6b48b",
+    uiBorder: "rgba(255, 221, 173, 0.2)",
+    uiAccent: "#ea8926",
+    uiAccentText: "#fffaf1",
+    uiShadow: "rgba(0, 0, 0, 0.34)"
+  },
+  navy: {
+    label: "Navy",
+    uiBg: "#0e1423",
+    uiPanel: "rgba(18, 28, 52, 0.82)",
+    uiPanelStrong: "rgba(12, 20, 38, 0.9)",
+    uiText: "#e2ebff",
+    uiMuted: "#97a8d1",
+    uiBorder: "rgba(198, 214, 255, 0.2)",
+    uiAccent: "#4d76d1",
+    uiAccentText: "#f4f7ff",
+    uiShadow: "rgba(0, 0, 0, 0.34)"
+  },
+  army: {
+    label: "Army",
+    uiBg: "#1b1c12",
+    uiPanel: "rgba(45, 48, 26, 0.82)",
+    uiPanelStrong: "rgba(30, 32, 17, 0.9)",
+    uiText: "#eff1df",
+    uiMuted: "#b0b59a",
+    uiBorder: "rgba(230, 236, 194, 0.18)",
+    uiAccent: "#8e9f4b",
+    uiAccentText: "#fafdf1",
+    uiShadow: "rgba(0, 0, 0, 0.34)"
+  },
+  "air force": {
+    label: "Air Force",
+    uiBg: "#111b24",
+    uiPanel: "rgba(24, 42, 57, 0.82)",
+    uiPanelStrong: "rgba(16, 29, 40, 0.9)",
+    uiText: "#e4f2ff",
+    uiMuted: "#9eb7c8",
+    uiBorder: "rgba(202, 227, 247, 0.2)",
+    uiAccent: "#5b97b8",
+    uiAccentText: "#f6fbff",
+    uiShadow: "rgba(0, 0, 0, 0.34)"
+  }
+};
+
 const app = document.getElementById("app");
 if (!app) throw new Error("#app not found");
 
 document.title = "Asimov Mini Machines";
 document.body.style.margin = "0";
-document.body.style.background = "#1c140f";
-document.body.style.color = "#f8ecd7";
 document.body.style.fontFamily = "Georgia, serif";
 
+const themeOptions = (Object.keys(themes) as ThemeName[]).map((name) => {
+  const theme = themes[name];
+  return `
+    <button class="theme-option" data-theme="${name}" type="button" aria-label="Use ${theme.label} theme">
+      <span class="theme-swatch" style="background:${theme.uiAccent}"></span>
+      <span>${theme.label}</span>
+    </button>
+  `;
+}).join("");
+
 app.innerHTML = `
-  <div style="position:relative;width:100vw;height:100vh;overflow:hidden;background:
-    radial-gradient(circle at top, #5a7c67 0%, #31473b 35%, #1c140f 100%);">
-    <canvas id="game" style="display:block;width:100%;height:100%"></canvas>
-    <div id="hud" style="
-      position:absolute;left:16px;top:16px;max-width:320px;
-      background:rgba(22,17,13,0.72);backdrop-filter:blur(8px);
-      border:1px solid rgba(248,236,215,0.18);border-radius:14px;
-      padding:14px 16px;line-height:1.35;box-shadow:0 10px 30px rgba(0,0,0,0.25);
-    "></div>
-    <details id="perf-panel" open style="
-      position:absolute;right:16px;top:16px;width:290px;
-      background:rgba(12,14,18,0.78);backdrop-filter:blur(8px);
-      border:1px solid rgba(185,219,255,0.22);border-radius:14px;
-      padding:0;box-shadow:0 10px 30px rgba(0,0,0,0.3);color:#d7e9ff;
-    ">
-      <summary style="
-        cursor:pointer;list-style:none;padding:12px 14px;
-        font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
-        user-select:none;
-      ">Performance Monitor</summary>
-      <div id="perf-body" style="padding:0 14px 14px 14px;font-size:13px;line-height:1.45"></div>
-    </details>
+  <style>
+    :root {
+      --ui-bg: ${themes.dark.uiBg};
+      --ui-panel: ${themes.dark.uiPanel};
+      --ui-panel-strong: ${themes.dark.uiPanelStrong};
+      --ui-text: ${themes.dark.uiText};
+      --ui-muted: ${themes.dark.uiMuted};
+      --ui-border: ${themes.dark.uiBorder};
+      --ui-accent: ${themes.dark.uiAccent};
+      --ui-accent-text: ${themes.dark.uiAccentText};
+      --ui-shadow: ${themes.dark.uiShadow};
+    }
+    #shell {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      color: var(--ui-text);
+      background: var(--ui-bg);
+    }
+    #game {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    #ui-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .panel {
+      pointer-events: auto;
+      background: var(--ui-panel);
+      color: var(--ui-text);
+      border: 1px solid var(--ui-border);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px var(--ui-shadow);
+      backdrop-filter: blur(8px);
+    }
+    .panel-strong {
+      background: var(--ui-panel-strong);
+    }
+    .nav {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 16px;
+      display: flex;
+      justify-content: center;
+      z-index: 3;
+    }
+    .nav-inner {
+      display: inline-flex;
+      gap: 8px;
+      padding: 8px;
+    }
+    .nav-link,
+    .theme-option {
+      appearance: none;
+      border: 1px solid var(--ui-border);
+      background: transparent;
+      color: var(--ui-text);
+      text-decoration: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font: inherit;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+    }
+    .nav-link {
+      padding: 10px 14px;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .nav-link.active,
+    .nav-link:hover,
+    .theme-option.active,
+    .theme-option:hover {
+      background: var(--ui-accent);
+      border-color: transparent;
+      color: var(--ui-accent-text);
+    }
+    .hud {
+      position: absolute;
+      left: 16px;
+      top: 88px;
+      max-width: 320px;
+      padding: 14px 16px;
+      line-height: 1.35;
+      z-index: 2;
+    }
+    .perf-panel {
+      position: absolute;
+      right: 16px;
+      top: 88px;
+      width: 290px;
+      padding: 0;
+      z-index: 2;
+    }
+    .perf-panel summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 12px 14px;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      user-select: none;
+      color: var(--ui-text);
+    }
+    .perf-panel summary::-webkit-details-marker {
+      display: none;
+    }
+    .perf-body {
+      padding: 0 14px 14px 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--ui-text);
+    }
+    .settings {
+      position: absolute;
+      inset: 88px 16px 16px 16px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .settings.active {
+      display: flex;
+    }
+    .settings-card {
+      width: min(860px, 100%);
+      max-height: 100%;
+      overflow: auto;
+      padding: 24px;
+      pointer-events: auto;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .theme-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      text-align: left;
+      width: 100%;
+    }
+    .theme-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+      flex: 0 0 auto;
+    }
+    .muted {
+      color: var(--ui-muted);
+    }
+    @media (max-width: 900px) {
+      .nav {
+        justify-content: flex-start;
+      }
+      .perf-panel {
+        width: min(290px, calc(100vw - 32px));
+      }
+      .hud {
+        max-width: min(320px, calc(100vw - 32px));
+      }
+      .settings {
+        inset: 80px 12px 12px 12px;
+      }
+    }
+  </style>
+  <div id="shell">
+    <canvas id="game"></canvas>
+    <div id="ui-layer">
+      <div class="nav">
+        <div class="nav-inner panel panel-strong">
+          <a id="nav-game" class="nav-link" href="#/">Drive</a>
+          <a id="nav-settings" class="nav-link" href="#/settings">Settings</a>
+        </div>
+      </div>
+      <div id="hud" class="panel hud"></div>
+      <details id="perf-panel" class="panel panel-strong perf-panel" open>
+        <summary>Performance Monitor</summary>
+        <div id="perf-body" class="perf-body"></div>
+      </details>
+      <section id="settings-route" class="settings">
+        <div class="settings-card panel panel-strong">
+          <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase" class="muted">Settings</div>
+          <div style="font-size:34px;margin:2px 0 8px 0">UI Theme</div>
+          <div class="muted" style="font-size:15px;line-height:1.5">
+            Themes apply to the interface only. The game rendering stays unchanged.
+          </div>
+          <div id="theme-grid" class="settings-grid">${themeOptions}</div>
+        </div>
+      </section>
+    </div>
   </div>
 `;
 
 const canvasEl = document.getElementById("game");
 const hudEl = document.getElementById("hud");
 const perfBodyEl = document.getElementById("perf-body");
+const perfPanelEl = document.getElementById("perf-panel");
+const settingsRouteEl = document.getElementById("settings-route");
+const navGameEl = document.getElementById("nav-game");
+const navSettingsEl = document.getElementById("nav-settings");
+const themeGridEl = document.getElementById("theme-grid");
+
 if (
   !(canvasEl instanceof HTMLCanvasElement) ||
   !(hudEl instanceof HTMLDivElement) ||
-  !(perfBodyEl instanceof HTMLDivElement)
+  !(perfBodyEl instanceof HTMLDivElement) ||
+  !(perfPanelEl instanceof HTMLDetailsElement) ||
+  !(settingsRouteEl instanceof HTMLElement) ||
+  !(navGameEl instanceof HTMLAnchorElement) ||
+  !(navSettingsEl instanceof HTMLAnchorElement) ||
+  !(themeGridEl instanceof HTMLDivElement)
 ) {
   throw new Error("UI not initialized");
 }
+
 const canvas: HTMLCanvasElement = canvasEl;
 const hud: HTMLDivElement = hudEl;
 const perfBody: HTMLDivElement = perfBodyEl;
+const perfPanel: HTMLDetailsElement = perfPanelEl;
+const settingsRoute: HTMLElement = settingsRouteEl;
+const navGame: HTMLAnchorElement = navGameEl;
+const navSettings: HTMLAnchorElement = navSettingsEl;
+const themeGrid: HTMLDivElement = themeGridEl;
 
 const glContext = canvas.getContext("webgl", { antialias: true });
 if (!glContext) throw new Error("WebGL not available");
 const gl: WebGLRenderingContext = glContext;
+
+const themeStorageKey = "asimov-mini-machines-theme";
+
+function isThemeName(value: string): value is ThemeName {
+  return Object.hasOwn(themes, value);
+}
+
+function loadTheme(): ThemeName {
+  const stored = window.localStorage.getItem(themeStorageKey);
+  return stored && isThemeName(stored) ? stored : "dark";
+}
+
+const uiState = {
+  route: "game" as RouteName,
+  theme: loadTheme()
+};
+
+function getRouteFromHash(hash: string): RouteName {
+  return hash === "#/settings" ? "settings" : "game";
+}
+
+function setTheme(themeName: ThemeName): void {
+  uiState.theme = themeName;
+  const theme = themes[themeName];
+  const root = document.documentElement.style;
+  root.setProperty("--ui-bg", theme.uiBg);
+  root.setProperty("--ui-panel", theme.uiPanel);
+  root.setProperty("--ui-panel-strong", theme.uiPanelStrong);
+  root.setProperty("--ui-text", theme.uiText);
+  root.setProperty("--ui-muted", theme.uiMuted);
+  root.setProperty("--ui-border", theme.uiBorder);
+  root.setProperty("--ui-accent", theme.uiAccent);
+  root.setProperty("--ui-accent-text", theme.uiAccentText);
+  root.setProperty("--ui-shadow", theme.uiShadow);
+  document.body.style.background = theme.uiBg;
+  window.localStorage.setItem(themeStorageKey, themeName);
+
+  const buttons = themeGrid.querySelectorAll<HTMLButtonElement>(".theme-option");
+  for (const button of buttons) {
+    button.classList.toggle("active", button.dataset.theme === themeName);
+  }
+}
+
+function applyRoute(route: RouteName): void {
+  uiState.route = route;
+  const onSettings = route === "settings";
+  settingsRoute.classList.toggle("active", onSettings);
+  hud.style.display = onSettings ? "none" : "block";
+  perfPanel.style.display = onSettings ? "none" : "block";
+  navGame.classList.toggle("active", route === "game");
+  navSettings.classList.toggle("active", route === "settings");
+}
+
+window.addEventListener("hashchange", () => {
+  applyRoute(getRouteFromHash(window.location.hash));
+});
+
+themeGrid.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const button = target.closest<HTMLButtonElement>(".theme-option");
+  const themeName = button?.dataset.theme;
+  if (!themeName || !isThemeName(themeName)) return;
+  setTheme(themeName);
+});
+
+setTheme(uiState.theme);
+applyRoute(getRouteFromHash(window.location.hash));
 
 const vertexShaderSource = `
 attribute vec2 aPosition;
@@ -489,7 +921,27 @@ function drawCircle(center: Vec2, radius: number, color: [number, number, number
   drawTriangles(vertices, color);
 }
 
-function render(input: InputState): void {
+function renderGameHud(input: InputState): void {
+  const speed = vecLength(car.vel);
+  const connected = (navigator.getGamepads?.() ?? []).some(Boolean);
+  hud.innerHTML = `
+    <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ui-muted)">Asimov Mini Machines</div>
+    <div style="font-size:30px;margin:2px 0 8px 0">Desk Rally</div>
+    <div style="font-size:14px;opacity:0.92">
+      Arrow keys steer and drive. Space handbrake. R reset.<br />
+      Gamepad: left stick steer, triggers accelerate/brake.
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--ui-border);font-size:14px">
+      <div>Input: <strong>${input.source}</strong>${connected ? " / gamepad ready" : ""}</div>
+      <div>Speed: <strong>${speed.toFixed(1)}</strong></div>
+      <div>Laps: <strong>${car.lap}</strong></div>
+      <div>Checkpoint: <strong>${car.checkpointIndex + 1}/${world.checkpoints.length}</strong></div>
+      <div>Theme: <strong>${themes[uiState.theme].label}</strong></div>
+    </div>
+  `;
+}
+
+function renderScene(): void {
   gl.clearColor(0.11, 0.08, 0.06, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -529,24 +981,6 @@ function render(input: InputState): void {
     y: car.pos.y + Math.sin(car.angle) * 1.15 - hopLift
   };
   drawCircle(nose, 0.28, [0.98, 0.92, 0.75, 1], 18);
-
-  const speed = vecLength(car.vel);
-  const connected = (navigator.getGamepads?.() ?? []).some(Boolean);
-  hud.innerHTML = `
-    <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.75">Asimov Mini Machines</div>
-    <div style="font-size:30px;margin:2px 0 8px 0">Desk Rally</div>
-    <div style="font-size:14px;opacity:0.92">
-      Arrow keys steer and drive. Space handbrake. R reset.<br />
-      Gamepad: left stick steer, triggers accelerate/brake.
-    </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(248,236,215,0.12);font-size:14px">
-      <div>Input: <strong>${input.source}</strong>${connected ? " / gamepad ready" : ""}</div>
-      <div>Speed: <strong>${speed.toFixed(1)}</strong></div>
-      <div>Laps: <strong>${car.lap}</strong></div>
-      <div>Checkpoint: <strong>${car.checkpointIndex + 1}/${world.checkpoints.length}</strong></div>
-      <div>Grip: <strong>${input.handbrake ? "slide" : "planted"}</strong></div>
-    </div>
-  `;
 }
 
 function updatePerfStats(stats: PerfStats): void {
@@ -564,7 +998,7 @@ function updatePerfStats(stats: PerfStats): void {
       <div>Checkpoints</div><div>${stats.checkpoints}</div>
       <div>Speed</div><div>${stats.speed.toFixed(1)}</div>
     </div>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(185,219,255,0.14);opacity:0.82">
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--ui-border);color:var(--ui-muted)">
       Track hotspots while optimizing in this order: frame budget, physics substeps, collision count, render cost, then input overhead.
     </div>
   `;
@@ -590,8 +1024,10 @@ function frame(now: number): void {
   const physicsMs = performance.now() - physicsStart;
 
   const renderStart = performance.now();
-  render(input);
+  renderScene();
   const renderMs = performance.now() - renderStart;
+
+  renderGameHud(input);
 
   const alpha = perf.alpha;
   perf.resizeMs = lerp(perf.resizeMs, resizeMs, alpha);
