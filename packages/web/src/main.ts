@@ -8,6 +8,19 @@ type InputState = {
   reset: boolean;
   source: "keyboard" | "gamepad" | "mixed" | "idle";
 };
+type PerfStats = {
+  fps: number;
+  frameMs: number;
+  inputMs: number;
+  physicsMs: number;
+  renderMs: number;
+  resizeMs: number;
+  substeps: number;
+  walls: number;
+  ramps: number;
+  checkpoints: number;
+  speed: number;
+};
 
 const app = document.getElementById("app");
 if (!app) throw new Error("#app not found");
@@ -28,16 +41,35 @@ app.innerHTML = `
       border:1px solid rgba(248,236,215,0.18);border-radius:14px;
       padding:14px 16px;line-height:1.35;box-shadow:0 10px 30px rgba(0,0,0,0.25);
     "></div>
+    <details id="perf-panel" open style="
+      position:absolute;right:16px;top:16px;width:290px;
+      background:rgba(12,14,18,0.78);backdrop-filter:blur(8px);
+      border:1px solid rgba(185,219,255,0.22);border-radius:14px;
+      padding:0;box-shadow:0 10px 30px rgba(0,0,0,0.3);color:#d7e9ff;
+    ">
+      <summary style="
+        cursor:pointer;list-style:none;padding:12px 14px;
+        font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
+        user-select:none;
+      ">Performance Monitor</summary>
+      <div id="perf-body" style="padding:0 14px 14px 14px;font-size:13px;line-height:1.45"></div>
+    </details>
   </div>
 `;
 
 const canvasEl = document.getElementById("game");
 const hudEl = document.getElementById("hud");
-if (!(canvasEl instanceof HTMLCanvasElement) || !(hudEl instanceof HTMLDivElement)) {
+const perfBodyEl = document.getElementById("perf-body");
+if (
+  !(canvasEl instanceof HTMLCanvasElement) ||
+  !(hudEl instanceof HTMLDivElement) ||
+  !(perfBodyEl instanceof HTMLDivElement)
+) {
   throw new Error("UI not initialized");
 }
 const canvas: HTMLCanvasElement = canvasEl;
 const hud: HTMLDivElement = hudEl;
+const perfBody: HTMLDivElement = perfBodyEl;
 
 const glContext = canvas.getContext("webgl", { antialias: true });
 if (!glContext) throw new Error("WebGL not available");
@@ -150,6 +182,16 @@ const camera = {
   y: car.pos.y,
   zoom: 18
 };
+const perf = {
+  frameMs: 0,
+  inputMs: 0,
+  physicsMs: 0,
+  renderMs: 0,
+  resizeMs: 0,
+  fps: 0,
+  alpha: 0.12
+};
+const PHYSICS_SUBSTEPS = 10;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -295,7 +337,7 @@ function resolveWorldCollisions(): void {
 }
 
 function updatePhysics(dt: number, input: InputState): void {
-  const substeps = 10;
+  const substeps = PHYSICS_SUBSTEPS;
   const step = dt / substeps;
   const maxSpeed = 24;
   const engineAccel = 27;
@@ -507,14 +549,73 @@ function render(input: InputState): void {
   `;
 }
 
+function updatePerfStats(stats: PerfStats): void {
+  perfBody.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px">
+      <div>FPS</div><div><strong>${stats.fps.toFixed(1)}</strong></div>
+      <div>Frame</div><div><strong>${stats.frameMs.toFixed(2)} ms</strong></div>
+      <div>Input</div><div>${stats.inputMs.toFixed(3)} ms</div>
+      <div>Physics</div><div>${stats.physicsMs.toFixed(3)} ms</div>
+      <div>Render</div><div>${stats.renderMs.toFixed(3)} ms</div>
+      <div>Resize</div><div>${stats.resizeMs.toFixed(3)} ms</div>
+      <div>Substeps</div><div>${stats.substeps}</div>
+      <div>Walls</div><div>${stats.walls}</div>
+      <div>Ramps</div><div>${stats.ramps}</div>
+      <div>Checkpoints</div><div>${stats.checkpoints}</div>
+      <div>Speed</div><div>${stats.speed.toFixed(1)}</div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(185,219,255,0.14);opacity:0.82">
+      Track hotspots while optimizing in this order: frame budget, physics substeps, collision count, render cost, then input overhead.
+    </div>
+  `;
+}
+
 let lastTime = performance.now();
 function frame(now: number): void {
+  const frameStart = performance.now();
+
+  const resizeStart = performance.now();
   resize();
+  const resizeMs = performance.now() - resizeStart;
+
   const dt = Math.min(0.033, (now - lastTime) / 1000);
   lastTime = now;
+
+  const inputStart = performance.now();
   const input = readInput();
+  const inputMs = performance.now() - inputStart;
+
+  const physicsStart = performance.now();
   updatePhysics(dt, input);
+  const physicsMs = performance.now() - physicsStart;
+
+  const renderStart = performance.now();
   render(input);
+  const renderMs = performance.now() - renderStart;
+
+  const frameMs = performance.now() - frameStart;
+  const alpha = perf.alpha;
+  perf.resizeMs = lerp(perf.resizeMs, resizeMs, alpha);
+  perf.inputMs = lerp(perf.inputMs, inputMs, alpha);
+  perf.physicsMs = lerp(perf.physicsMs, physicsMs, alpha);
+  perf.renderMs = lerp(perf.renderMs, renderMs, alpha);
+  perf.frameMs = lerp(perf.frameMs, frameMs, alpha);
+  perf.fps = perf.frameMs > 0 ? 1000 / perf.frameMs : 0;
+
+  updatePerfStats({
+    fps: perf.fps,
+    frameMs: perf.frameMs,
+    inputMs: perf.inputMs,
+    physicsMs: perf.physicsMs,
+    renderMs: perf.renderMs,
+    resizeMs: perf.resizeMs,
+    substeps: PHYSICS_SUBSTEPS,
+    walls: world.walls.length,
+    ramps: world.ramps.length,
+    checkpoints: world.checkpoints.length,
+    speed: vecLength(car.vel)
+  });
+
   requestAnimationFrame(frame);
 }
 
