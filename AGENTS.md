@@ -4,7 +4,7 @@
 
 This repository uses a strict change-and-verify workflow.
 
-When making changes, do not stop after editing code. Always validate the workspace in the same order CI expects, fix errors, and only then hand off.
+When making code changes, do not stop after editing code. Validate the workspace in the same order CI expects, fix errors, and only then hand off.
 
 ## Required Verification Order
 
@@ -17,7 +17,11 @@ Rules:
 
 - If `npm run build` fails, fix the errors before running `npm run lint`.
 - Only run `npm run lint` after `npm run build` succeeds.
-- Do not report success unless both commands succeed.
+- Do not report success on code changes unless both commands succeed.
+
+Exception:
+
+- Documentation-only changes do not require `npm run build` or `npm run lint`.
 
 This is the default verification method for future changes in this repo.
 
@@ -90,9 +94,11 @@ If the file grows further, the next logical refactor is to split `packages/web/s
 
 ## Definition Of Done
 
-A change is not done until:
+A code change is not done until:
 
 - the requested code changes are implemented
 - `npm run build` succeeds
 - `npm run lint` succeeds
 - any CI-relevant issues found during that process are fixed
+
+For shared naming and project conventions, also see `README.md`.
