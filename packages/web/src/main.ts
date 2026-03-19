@@ -554,10 +554,10 @@ function updatePerfStats(stats: PerfStats): void {
     <div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px">
       <div>FPS</div><div><strong>${stats.fps.toFixed(1)}</strong></div>
       <div>Frame</div><div><strong>${stats.frameMs.toFixed(2)} ms</strong></div>
-      <div>Input</div><div>${stats.inputMs.toFixed(3)} ms</div>
-      <div>Physics</div><div>${stats.physicsMs.toFixed(3)} ms</div>
-      <div>Render</div><div>${stats.renderMs.toFixed(3)} ms</div>
-      <div>Resize</div><div>${stats.resizeMs.toFixed(3)} ms</div>
+      <div>Input CPU</div><div>${stats.inputMs.toFixed(3)} ms</div>
+      <div>Physics CPU</div><div>${stats.physicsMs.toFixed(3)} ms</div>
+      <div>Render CPU</div><div>${stats.renderMs.toFixed(3)} ms</div>
+      <div>Resize CPU</div><div>${stats.resizeMs.toFixed(3)} ms</div>
       <div>Substeps</div><div>${stats.substeps}</div>
       <div>Walls</div><div>${stats.walls}</div>
       <div>Ramps</div><div>${stats.ramps}</div>
@@ -572,13 +572,13 @@ function updatePerfStats(stats: PerfStats): void {
 
 let lastTime = performance.now();
 function frame(now: number): void {
-  const frameStart = performance.now();
+  const frameDeltaMs = now - lastTime;
 
   const resizeStart = performance.now();
   resize();
   const resizeMs = performance.now() - resizeStart;
 
-  const dt = Math.min(0.033, (now - lastTime) / 1000);
+  const dt = Math.min(0.033, frameDeltaMs / 1000);
   lastTime = now;
 
   const inputStart = performance.now();
@@ -593,13 +593,12 @@ function frame(now: number): void {
   render(input);
   const renderMs = performance.now() - renderStart;
 
-  const frameMs = performance.now() - frameStart;
   const alpha = perf.alpha;
   perf.resizeMs = lerp(perf.resizeMs, resizeMs, alpha);
   perf.inputMs = lerp(perf.inputMs, inputMs, alpha);
   perf.physicsMs = lerp(perf.physicsMs, physicsMs, alpha);
   perf.renderMs = lerp(perf.renderMs, renderMs, alpha);
-  perf.frameMs = lerp(perf.frameMs, frameMs, alpha);
+  perf.frameMs = lerp(perf.frameMs, frameDeltaMs, alpha);
   perf.fps = perf.frameMs > 0 ? 1000 / perf.frameMs : 0;
 
   updatePerfStats({
