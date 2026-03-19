@@ -31,12 +31,17 @@ app.innerHTML = `
   </div>
 `;
 
-const canvas = document.getElementById("game") as HTMLCanvasElement | null;
-const hud = document.getElementById("hud") as HTMLDivElement | null;
-if (!canvas || !hud) throw new Error("UI not initialized");
+const canvasEl = document.getElementById("game");
+const hudEl = document.getElementById("hud");
+if (!(canvasEl instanceof HTMLCanvasElement) || !(hudEl instanceof HTMLDivElement)) {
+  throw new Error("UI not initialized");
+}
+const canvas: HTMLCanvasElement = canvasEl;
+const hud: HTMLDivElement = hudEl;
 
-const gl = canvas.getContext("webgl", { antialias: true });
-if (!gl) throw new Error("WebGL not available");
+const glContext = canvas.getContext("webgl", { antialias: true });
+if (!glContext) throw new Error("WebGL not available");
+const gl: WebGLRenderingContext = glContext;
 
 const vertexShaderSource = `
 attribute vec2 aPosition;
@@ -154,12 +159,12 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function length(v: Vec2): number {
+function vecLength(v: Vec2): number {
   return Math.hypot(v.x, v.y);
 }
 
 function normalize(v: Vec2): Vec2 {
-  const len = length(v) || 1;
+  const len = vecLength(v) || 1;
   return { x: v.x / len, y: v.y / len };
 }
 
@@ -321,7 +326,7 @@ function updatePhysics(dt: number, input: InputState): void {
     car.vel.x += forward.x * accel * step;
     car.vel.y += forward.y * accel * step;
 
-    const speed = length(car.vel);
+    const speed = vecLength(car.vel);
     const steerScale = clamp(speed / 7, 0.2, 1.2);
     const turnRate = car.steer * steerScale * 2.45 * Math.sign(forwardSpeed || 1);
     car.angle += turnRate * step;
@@ -350,7 +355,7 @@ function updatePhysics(dt: number, input: InputState): void {
   }
 
   car.hop = Math.max(0, car.hop - dt);
-  if (length(car.vel) < 0.08 && input.throttle === 0 && input.brake === 0) {
+  if (vecLength(car.vel) < 0.08 && input.throttle === 0 && input.brake === 0) {
     car.vel.x = 0;
     car.vel.y = 0;
   }
@@ -412,13 +417,16 @@ function drawRotatedRect(center: Vec2, w: number, h: number, angle: number, colo
     y: center.y + corner.x * sin + corner.y * cos
   })).map(worldToScreen);
 
+  const [c0, c1, c2, c3] = corners;
+  if (!c0 || !c1 || !c2 || !c3) return;
+
   drawTriangles([
-    corners[0].x, corners[0].y,
-    corners[1].x, corners[1].y,
-    corners[2].x, corners[2].y,
-    corners[0].x, corners[0].y,
-    corners[2].x, corners[2].y,
-    corners[3].x, corners[3].y
+    c0.x, c0.y,
+    c1.x, c1.y,
+    c2.x, c2.y,
+    c0.x, c0.y,
+    c2.x, c2.y,
+    c3.x, c3.y
   ], color);
 }
 
@@ -480,7 +488,7 @@ function render(input: InputState): void {
   };
   drawCircle(nose, 0.28, [0.98, 0.92, 0.75, 1], 18);
 
-  const speed = length(car.vel);
+  const speed = vecLength(car.vel);
   const connected = (navigator.getGamepads?.() ?? []).some(Boolean);
   hud.innerHTML = `
     <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;opacity:0.75">Asimov Mini Machines</div>
