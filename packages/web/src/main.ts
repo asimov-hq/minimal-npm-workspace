@@ -1,6 +1,6 @@
 type Vec2 = { x: number; y: number };
 type Rect = { x: number; y: number; w: number; h: number };
-type RouteName = "game" | "settings";
+type RouteName = "game" | "settings" | "performance";
 type ThemeName =
   | "dark"
   | "light"
@@ -386,6 +386,7 @@ app.innerHTML = `
         <div class="nav-inner panel panel-strong">
           <a id="nav-game" class="nav-link" href="#/">Drive</a>
           <a id="nav-settings" class="nav-link" href="#/settings">Settings</a>
+          <a id="nav-performance" class="nav-link" href="#/performance">Performance</a>
         </div>
       </div>
       <div id="hud" class="panel hud"></div>
@@ -403,6 +404,9 @@ app.innerHTML = `
           <div id="theme-grid" class="settings-grid">${themeOptions}</div>
         </div>
       </section>
+      <section id="performance-route" class="settings">
+        <div id="performance-card" class="settings-card panel panel-strong"></div>
+      </section>
     </div>
   </div>
 `;
@@ -412,9 +416,12 @@ const hudEl = document.getElementById("hud");
 const perfBodyEl = document.getElementById("perf-body");
 const perfPanelEl = document.getElementById("perf-panel");
 const settingsRouteEl = document.getElementById("settings-route");
+const performanceRouteEl = document.getElementById("performance-route");
 const navGameEl = document.getElementById("nav-game");
 const navSettingsEl = document.getElementById("nav-settings");
+const navPerformanceEl = document.getElementById("nav-performance");
 const themeGridEl = document.getElementById("theme-grid");
+const performanceCardEl = document.getElementById("performance-card");
 
 if (
   !(canvasEl instanceof HTMLCanvasElement) ||
@@ -422,9 +429,12 @@ if (
   !(perfBodyEl instanceof HTMLDivElement) ||
   !(perfPanelEl instanceof HTMLDetailsElement) ||
   !(settingsRouteEl instanceof HTMLElement) ||
+  !(performanceRouteEl instanceof HTMLElement) ||
   !(navGameEl instanceof HTMLAnchorElement) ||
   !(navSettingsEl instanceof HTMLAnchorElement) ||
-  !(themeGridEl instanceof HTMLDivElement)
+  !(navPerformanceEl instanceof HTMLAnchorElement) ||
+  !(themeGridEl instanceof HTMLDivElement) ||
+  !(performanceCardEl instanceof HTMLDivElement)
 ) {
   throw new Error("UI not initialized");
 }
@@ -434,9 +444,12 @@ const hud: HTMLDivElement = hudEl;
 const perfBody: HTMLDivElement = perfBodyEl;
 const perfPanel: HTMLDetailsElement = perfPanelEl;
 const settingsRoute: HTMLElement = settingsRouteEl;
+const performanceRoute: HTMLElement = performanceRouteEl;
 const navGame: HTMLAnchorElement = navGameEl;
 const navSettings: HTMLAnchorElement = navSettingsEl;
+const navPerformance: HTMLAnchorElement = navPerformanceEl;
 const themeGrid: HTMLDivElement = themeGridEl;
+const performanceCard: HTMLDivElement = performanceCardEl;
 
 const glContext = canvas.getContext("webgl", { antialias: true });
 if (!glContext) throw new Error("WebGL not available");
@@ -446,7 +459,7 @@ const themeStorageKey = "asimov-mini-machines-theme";
 const searchParams = new URLSearchParams(window.location.search);
 const benchmarkMode = searchParams.get("benchmark") === "1";
 const showPerfInBenchmark = searchParams.get("perf") === "1";
-const PERF_MONITOR_INTERVAL_MS = 1000;
+const DEFAULT_PERF_MONITOR_INTERVAL_MS = 1000;
 
 function isThemeName(value: string): value is ThemeName {
   return Object.hasOwn(themes, value);
@@ -460,11 +473,17 @@ function loadTheme(): ThemeName {
 const uiState = {
   route: "game" as RouteName,
   theme: loadTheme(),
-  benchmarkMode
+  benchmarkMode,
+  showPerfOverlayInBenchmark: showPerfInBenchmark,
+  simulationRunning: true,
+  simulationSpeedPct: 100,
+  perfMonitorIntervalMs: DEFAULT_PERF_MONITOR_INTERVAL_MS
 };
 
 function getRouteFromHash(hash: string): RouteName {
-  return hash === "#/settings" ? "settings" : "game";
+  if (hash === "#/settings") return "settings";
+  if (hash === "#/performance") return "performance";
+  return "game";
 }
 
 function setTheme(themeName: ThemeName): void {
@@ -492,13 +511,80 @@ function setTheme(themeName: ThemeName): void {
 function applyRoute(route: RouteName): void {
   uiState.route = route;
   const onSettings = route === "settings";
+  const onPerformance = route === "performance";
   settingsRoute.classList.toggle("active", onSettings);
-  const hideHud = onSettings || uiState.benchmarkMode;
-  const hidePerf = onSettings || (uiState.benchmarkMode && !showPerfInBenchmark);
+  performanceRoute.classList.toggle("active", onPerformance);
+  const hideHud = route !== "game" || uiState.benchmarkMode;
+  const hidePerf = route !== "game" || (uiState.benchmarkMode && !uiState.showPerfOverlayInBenchmark);
   hud.style.display = hideHud ? "none" : "block";
   perfPanel.style.display = hidePerf ? "none" : "block";
   navGame.classList.toggle("active", route === "game");
   navSettings.classList.toggle("active", route === "settings");
+  navPerformance.classList.toggle("active", route === "performance");
+}
+
+function renderPerformanceRoute(stats: PerfStats): void {
+  const simLabel = uiState.simulationRunning ? "Pause Simulation" : "Start Simulation";
+  performanceCard.innerHTML = `
+    <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase" class="muted">Performance</div>
+    <div style="font-size:34px;margin:2px 0 8px 0">Runtime Controls</div>
+    <div class="muted" style="font-size:15px;line-height:1.5">
+      Developer controls for measurement, simulation state, and the quick in-game performance overlay.
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:18px">
+      <div>
+        <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase" class="muted">Simulation</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:12px">
+          <button id="sim-toggle" class="theme-option" type="button" style="justify-content:center">${simLabel}</button>
+          <label for="sim-speed" style="display:block">
+            <div style="display:flex;justify-content:space-between;gap:12px">
+              <span>Simulation Speed</span>
+              <strong>${uiState.simulationSpeedPct}%</strong>
+            </div>
+            <input id="sim-speed" type="range" min="0" max="120" step="5" value="${uiState.simulationSpeedPct}" style="width:100%;margin-top:8px" />
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase" class="muted">Benchmarking</div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+          <label style="display:flex;align-items:center;gap:10px">
+            <input id="benchmark-toggle" type="checkbox" ${uiState.benchmarkMode ? "checked" : ""} />
+            <span>Benchmark mode</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px">
+            <input id="perf-overlay-toggle" type="checkbox" ${uiState.showPerfOverlayInBenchmark ? "checked" : ""} />
+            <span>Show quick perf overlay during benchmark mode</span>
+          </label>
+          <label for="perf-interval" style="display:block">
+            <div style="display:flex;justify-content:space-between;gap:12px">
+              <span>Perf Monitor Interval</span>
+              <strong>${uiState.perfMonitorIntervalMs} ms</strong>
+            </div>
+            <input id="perf-interval" type="range" min="250" max="4000" step="250" value="${uiState.perfMonitorIntervalMs}" style="width:100%;margin-top:8px" />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--ui-border)">
+      <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase" class="muted">Current Metrics</div>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:12px">
+        <div>FPS</div><div><strong>${stats.fps.toFixed(1)}</strong></div>
+        <div>Frame</div><div><strong>${stats.frameMs.toFixed(2)} ms</strong></div>
+        <div>Input CPU</div><div>${stats.inputMs.toFixed(3)} ms</div>
+        <div>Physics CPU</div><div>${stats.physicsMs.toFixed(3)} ms</div>
+        <div>Render CPU</div><div>${stats.renderMs.toFixed(3)} ms</div>
+        <div>Resize CPU</div><div>${stats.resizeMs.toFixed(3)} ms</div>
+        <div>UI Update CPU</div><div>${stats.uiUpdateMs.toFixed(3)} ms</div>
+        <div>DOM Writes</div><div>${stats.domWrites}</div>
+        <div>Substeps</div><div>${stats.substeps}</div>
+        <div>Speed</div><div>${stats.speed.toFixed(1)}</div>
+      </div>
+    </div>
+  `;
 }
 
 window.addEventListener("hashchange", () => {
@@ -512,6 +598,48 @@ themeGrid.addEventListener("click", (event) => {
   const themeName = button?.dataset.theme;
   if (!themeName || !isThemeName(themeName)) return;
   setTheme(themeName);
+});
+
+performanceCard.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  if (target.id !== "sim-toggle") return;
+  uiState.simulationRunning = !uiState.simulationRunning;
+  renderPerformanceRoute(lastPerfStats);
+});
+
+performanceCard.addEventListener("input", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+
+  if (target.id === "sim-speed") {
+    uiState.simulationSpeedPct = Number(target.value);
+    renderPerformanceRoute(lastPerfStats);
+    return;
+  }
+
+  if (target.id === "perf-interval") {
+    uiState.perfMonitorIntervalMs = Number(target.value);
+    renderPerformanceRoute(lastPerfStats);
+  }
+});
+
+performanceCard.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+
+  if (target.id === "benchmark-toggle") {
+    uiState.benchmarkMode = target.checked;
+    applyRoute(uiState.route);
+    renderPerformanceRoute(lastPerfStats);
+    return;
+  }
+
+  if (target.id === "perf-overlay-toggle") {
+    uiState.showPerfOverlayInBenchmark = target.checked;
+    applyRoute(uiState.route);
+    renderPerformanceRoute(lastPerfStats);
+  }
 });
 
 setTheme(uiState.theme);
@@ -636,6 +764,23 @@ const perf = {
 };
 const PHYSICS_SUBSTEPS = 10;
 let perfLastUpdatedAt = 0;
+let lastPerfStats: PerfStats = {
+  fps: 0,
+  frameMs: 0,
+  inputMs: 0,
+  physicsMs: 0,
+  renderMs: 0,
+  resizeMs: 0,
+  uiUpdateMs: 0,
+  substeps: PHYSICS_SUBSTEPS,
+  walls: world.walls.length,
+  ramps: world.ramps.length,
+  checkpoints: world.checkpoints.length,
+  speed: 0,
+  domWrites: 0,
+  benchmarkMode: uiState.benchmarkMode
+};
+renderPerformanceRoute(lastPerfStats);
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -999,7 +1144,7 @@ function renderScene(): void {
 
 function updatePerfStats(stats: PerfStats): void {
   if (uiState.route !== "game") return;
-  if (uiState.benchmarkMode && !showPerfInBenchmark) return;
+  if (uiState.benchmarkMode && !uiState.showPerfOverlayInBenchmark) return;
 
   perfBody.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px">
@@ -1041,7 +1186,8 @@ function frame(now: number): void {
   const inputMs = performance.now() - inputStart;
 
   const physicsStart = performance.now();
-  updatePhysics(dt, input);
+  const simulationDt = uiState.simulationRunning ? dt * (uiState.simulationSpeedPct / 100) : 0;
+  updatePhysics(simulationDt, input);
   const physicsMs = performance.now() - physicsStart;
 
   const renderStart = performance.now();
@@ -1061,24 +1207,30 @@ function frame(now: number): void {
   perf.renderMs = lerp(perf.renderMs, renderMs, alpha);
   perf.frameMs = lerp(perf.frameMs, frameDeltaMs, alpha);
   perf.fps = perf.frameMs > 0 ? 1000 / perf.frameMs : 0;
-  if (now - perfLastUpdatedAt >= PERF_MONITOR_INTERVAL_MS) {
-    if (uiState.route === "game" && (!uiState.benchmarkMode || showPerfInBenchmark)) {
-      updatePerfStats({
-        fps: perf.fps,
-        frameMs: perf.frameMs,
-        inputMs: perf.inputMs,
-        physicsMs: perf.physicsMs,
-        renderMs: perf.renderMs,
-        resizeMs: perf.resizeMs,
-        uiUpdateMs: perf.uiUpdateMs,
-        substeps: PHYSICS_SUBSTEPS,
-        walls: world.walls.length,
-        ramps: world.ramps.length,
-        checkpoints: world.checkpoints.length,
-        speed: vecLength(car.vel),
-        domWrites: domWrites + 1,
-        benchmarkMode: uiState.benchmarkMode
-      });
+  lastPerfStats = {
+    fps: perf.fps,
+    frameMs: perf.frameMs,
+    inputMs: perf.inputMs,
+    physicsMs: perf.physicsMs,
+    renderMs: perf.renderMs,
+    resizeMs: perf.resizeMs,
+    uiUpdateMs: perf.uiUpdateMs,
+    substeps: PHYSICS_SUBSTEPS,
+    walls: world.walls.length,
+    ramps: world.ramps.length,
+    checkpoints: world.checkpoints.length,
+    speed: vecLength(car.vel),
+    domWrites,
+    benchmarkMode: uiState.benchmarkMode
+  };
+
+  if (now - perfLastUpdatedAt >= uiState.perfMonitorIntervalMs) {
+    if (uiState.route === "game" && (!uiState.benchmarkMode || uiState.showPerfOverlayInBenchmark)) {
+      updatePerfStats({ ...lastPerfStats, domWrites: domWrites + 1 });
+      domWrites += 1;
+    }
+    if (uiState.route === "performance") {
+      renderPerformanceRoute(lastPerfStats);
       domWrites += 1;
     }
     perfLastUpdatedAt = now;
