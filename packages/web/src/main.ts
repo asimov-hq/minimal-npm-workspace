@@ -538,6 +538,24 @@ function syncSimulationUi(): void {
   navSimToggle.setAttribute("aria-label", uiState.simulationRunning ? "Pause simulation" : "Start simulation");
 }
 
+function syncPerformanceControls(): void {
+  const simToggle = performanceControls.querySelector<HTMLButtonElement>("#sim-toggle");
+  const simSpeed = performanceControls.querySelector<HTMLInputElement>("#sim-speed");
+  const simSpeedValue = performanceControls.querySelector<HTMLElement>("#sim-speed-value");
+  const benchmarkToggle = performanceControls.querySelector<HTMLInputElement>("#benchmark-toggle");
+  const perfOverlayToggle = performanceControls.querySelector<HTMLInputElement>("#perf-overlay-toggle");
+  const perfInterval = performanceControls.querySelector<HTMLInputElement>("#perf-interval");
+  const perfIntervalValue = performanceControls.querySelector<HTMLElement>("#perf-interval-value");
+
+  if (simToggle) simToggle.textContent = uiState.simulationRunning ? "Pause Simulation" : "Start Simulation";
+  if (simSpeed) simSpeed.value = String(uiState.simulationSpeedPct);
+  if (simSpeedValue) simSpeedValue.textContent = `${uiState.simulationSpeedPct}%`;
+  if (benchmarkToggle) benchmarkToggle.checked = uiState.benchmarkMode;
+  if (perfOverlayToggle) perfOverlayToggle.checked = uiState.showPerfOverlayInBenchmark;
+  if (perfInterval) perfInterval.value = String(uiState.perfMonitorIntervalMs);
+  if (perfIntervalValue) perfIntervalValue.textContent = `${uiState.perfMonitorIntervalMs} ms`;
+}
+
 function renderPerformanceControls(): void {
   const simLabel = uiState.simulationRunning ? "Pause Simulation" : "Start Simulation";
   performanceControls.innerHTML = `
@@ -555,7 +573,7 @@ function renderPerformanceControls(): void {
           <label for="sim-speed" style="display:block">
             <div style="display:flex;justify-content:space-between;gap:12px">
               <span>Simulation Speed</span>
-              <strong>${uiState.simulationSpeedPct}%</strong>
+              <strong id="sim-speed-value">${uiState.simulationSpeedPct}%</strong>
             </div>
             <input id="sim-speed" type="range" min="0" max="120" step="5" value="${uiState.simulationSpeedPct}" style="width:100%;margin-top:8px" />
           </label>
@@ -576,7 +594,7 @@ function renderPerformanceControls(): void {
           <label for="perf-interval" style="display:block">
             <div style="display:flex;justify-content:space-between;gap:12px">
               <span>Perf Monitor Interval</span>
-              <strong>${uiState.perfMonitorIntervalMs} ms</strong>
+              <strong id="perf-interval-value">${uiState.perfMonitorIntervalMs} ms</strong>
             </div>
             <input id="perf-interval" type="range" min="250" max="4000" step="250" value="${uiState.perfMonitorIntervalMs}" style="width:100%;margin-top:8px" />
           </label>
@@ -613,7 +631,7 @@ window.addEventListener("hashchange", () => {
 navSimToggle.addEventListener("click", () => {
   uiState.simulationRunning = !uiState.simulationRunning;
   syncSimulationUi();
-  renderPerformanceControls();
+  syncPerformanceControls();
   renderPerformanceMetrics(lastPerfStats);
 });
 
@@ -632,7 +650,7 @@ performanceControls.addEventListener("click", (event) => {
   if (target.id !== "sim-toggle") return;
   uiState.simulationRunning = !uiState.simulationRunning;
   syncSimulationUi();
-  renderPerformanceControls();
+  syncPerformanceControls();
   renderPerformanceMetrics(lastPerfStats);
 });
 
@@ -642,14 +660,14 @@ performanceControls.addEventListener("input", (event) => {
 
   if (target.id === "sim-speed") {
     uiState.simulationSpeedPct = Number(target.value);
-    renderPerformanceControls();
+    syncPerformanceControls();
     renderPerformanceMetrics(lastPerfStats);
     return;
   }
 
   if (target.id === "perf-interval") {
     uiState.perfMonitorIntervalMs = Number(target.value);
-    renderPerformanceControls();
+    syncPerformanceControls();
     renderPerformanceMetrics(lastPerfStats);
   }
 });
@@ -661,7 +679,7 @@ performanceControls.addEventListener("change", (event) => {
   if (target.id === "benchmark-toggle") {
     uiState.benchmarkMode = target.checked;
     applyRoute(uiState.route);
-    renderPerformanceControls();
+    syncPerformanceControls();
     renderPerformanceMetrics(lastPerfStats);
     return;
   }
@@ -669,7 +687,7 @@ performanceControls.addEventListener("change", (event) => {
   if (target.id === "perf-overlay-toggle") {
     uiState.showPerfOverlayInBenchmark = target.checked;
     applyRoute(uiState.route);
-    renderPerformanceControls();
+    syncPerformanceControls();
     renderPerformanceMetrics(lastPerfStats);
   }
 });
