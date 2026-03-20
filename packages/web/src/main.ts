@@ -406,7 +406,10 @@ app.innerHTML = `
         </div>
       </section>
       <section id="performance-route" class="settings">
-        <div id="performance-card" class="settings-card panel panel-strong"></div>
+        <div class="settings-card panel panel-strong">
+          <div id="performance-controls"></div>
+          <div id="performance-metrics"></div>
+        </div>
       </section>
     </div>
   </div>
@@ -423,7 +426,8 @@ const navGameEl = document.getElementById("nav-game");
 const navSettingsEl = document.getElementById("nav-settings");
 const navPerformanceEl = document.getElementById("nav-performance");
 const themeGridEl = document.getElementById("theme-grid");
-const performanceCardEl = document.getElementById("performance-card");
+const performanceControlsEl = document.getElementById("performance-controls");
+const performanceMetricsEl = document.getElementById("performance-metrics");
 
 if (
   !(canvasEl instanceof HTMLCanvasElement) ||
@@ -437,7 +441,8 @@ if (
   !(navSettingsEl instanceof HTMLAnchorElement) ||
   !(navPerformanceEl instanceof HTMLAnchorElement) ||
   !(themeGridEl instanceof HTMLDivElement) ||
-  !(performanceCardEl instanceof HTMLDivElement)
+  !(performanceControlsEl instanceof HTMLDivElement) ||
+  !(performanceMetricsEl instanceof HTMLDivElement)
 ) {
   throw new Error("UI not initialized");
 }
@@ -453,7 +458,8 @@ const navGame: HTMLAnchorElement = navGameEl;
 const navSettings: HTMLAnchorElement = navSettingsEl;
 const navPerformance: HTMLAnchorElement = navPerformanceEl;
 const themeGrid: HTMLDivElement = themeGridEl;
-const performanceCard: HTMLDivElement = performanceCardEl;
+const performanceControls: HTMLDivElement = performanceControlsEl;
+const performanceMetrics: HTMLDivElement = performanceMetricsEl;
 
 const glContext = canvas.getContext("webgl", { antialias: true });
 if (!glContext) throw new Error("WebGL not available");
@@ -532,9 +538,9 @@ function syncSimulationUi(): void {
   navSimToggle.setAttribute("aria-label", uiState.simulationRunning ? "Pause simulation" : "Start simulation");
 }
 
-function renderPerformanceRoute(stats: PerfStats): void {
+function renderPerformanceControls(): void {
   const simLabel = uiState.simulationRunning ? "Pause Simulation" : "Start Simulation";
-  performanceCard.innerHTML = `
+  performanceControls.innerHTML = `
     <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase" class="muted">Performance</div>
     <div style="font-size:34px;margin:2px 0 8px 0">Runtime Controls</div>
     <div class="muted" style="font-size:15px;line-height:1.5">
@@ -577,7 +583,11 @@ function renderPerformanceRoute(stats: PerfStats): void {
         </div>
       </div>
     </div>
+  `;
+}
 
+function renderPerformanceMetrics(stats: PerfStats): void {
+  performanceMetrics.innerHTML = `
     <div style="margin-top:22px;padding-top:16px;border-top:1px solid var(--ui-border)">
       <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase" class="muted">Current Metrics</div>
       <div style="display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:12px">
@@ -603,7 +613,8 @@ window.addEventListener("hashchange", () => {
 navSimToggle.addEventListener("click", () => {
   uiState.simulationRunning = !uiState.simulationRunning;
   syncSimulationUi();
-  renderPerformanceRoute(lastPerfStats);
+  renderPerformanceControls();
+  renderPerformanceMetrics(lastPerfStats);
 });
 
 themeGrid.addEventListener("click", (event) => {
@@ -615,46 +626,51 @@ themeGrid.addEventListener("click", (event) => {
   setTheme(themeName);
 });
 
-performanceCard.addEventListener("click", (event) => {
+performanceControls.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
   if (target.id !== "sim-toggle") return;
   uiState.simulationRunning = !uiState.simulationRunning;
   syncSimulationUi();
-  renderPerformanceRoute(lastPerfStats);
+  renderPerformanceControls();
+  renderPerformanceMetrics(lastPerfStats);
 });
 
-performanceCard.addEventListener("input", (event) => {
+performanceControls.addEventListener("input", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLInputElement)) return;
 
   if (target.id === "sim-speed") {
     uiState.simulationSpeedPct = Number(target.value);
-    renderPerformanceRoute(lastPerfStats);
+    renderPerformanceControls();
+    renderPerformanceMetrics(lastPerfStats);
     return;
   }
 
   if (target.id === "perf-interval") {
     uiState.perfMonitorIntervalMs = Number(target.value);
-    renderPerformanceRoute(lastPerfStats);
+    renderPerformanceControls();
+    renderPerformanceMetrics(lastPerfStats);
   }
 });
 
-performanceCard.addEventListener("change", (event) => {
+performanceControls.addEventListener("change", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLInputElement)) return;
 
   if (target.id === "benchmark-toggle") {
     uiState.benchmarkMode = target.checked;
     applyRoute(uiState.route);
-    renderPerformanceRoute(lastPerfStats);
+    renderPerformanceControls();
+    renderPerformanceMetrics(lastPerfStats);
     return;
   }
 
   if (target.id === "perf-overlay-toggle") {
     uiState.showPerfOverlayInBenchmark = target.checked;
     applyRoute(uiState.route);
-    renderPerformanceRoute(lastPerfStats);
+    renderPerformanceControls();
+    renderPerformanceMetrics(lastPerfStats);
   }
 });
 
@@ -797,7 +813,8 @@ let lastPerfStats: PerfStats = {
   domWrites: 0,
   benchmarkMode: uiState.benchmarkMode
 };
-renderPerformanceRoute(lastPerfStats);
+renderPerformanceControls();
+renderPerformanceMetrics(lastPerfStats);
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -1247,7 +1264,7 @@ function frame(now: number): void {
       domWrites += 1;
     }
     if (uiState.route === "performance") {
-      renderPerformanceRoute(lastPerfStats);
+      renderPerformanceMetrics(lastPerfStats);
       domWrites += 1;
     }
     perfLastUpdatedAt = now;
