@@ -384,6 +384,7 @@ app.innerHTML = `
     <div id="ui-layer">
       <div class="nav">
         <div class="nav-inner panel panel-strong">
+          <button id="nav-sim-toggle" class="nav-link" type="button" aria-label="Pause simulation">||</button>
           <a id="nav-game" class="nav-link" href="#/">Drive</a>
           <a id="nav-settings" class="nav-link" href="#/settings">Settings</a>
           <a id="nav-performance" class="nav-link" href="#/performance">Performance</a>
@@ -417,6 +418,7 @@ const perfBodyEl = document.getElementById("perf-body");
 const perfPanelEl = document.getElementById("perf-panel");
 const settingsRouteEl = document.getElementById("settings-route");
 const performanceRouteEl = document.getElementById("performance-route");
+const navSimToggleEl = document.getElementById("nav-sim-toggle");
 const navGameEl = document.getElementById("nav-game");
 const navSettingsEl = document.getElementById("nav-settings");
 const navPerformanceEl = document.getElementById("nav-performance");
@@ -430,6 +432,7 @@ if (
   !(perfPanelEl instanceof HTMLDetailsElement) ||
   !(settingsRouteEl instanceof HTMLElement) ||
   !(performanceRouteEl instanceof HTMLElement) ||
+  !(navSimToggleEl instanceof HTMLButtonElement) ||
   !(navGameEl instanceof HTMLAnchorElement) ||
   !(navSettingsEl instanceof HTMLAnchorElement) ||
   !(navPerformanceEl instanceof HTMLAnchorElement) ||
@@ -445,6 +448,7 @@ const perfBody: HTMLDivElement = perfBodyEl;
 const perfPanel: HTMLDetailsElement = perfPanelEl;
 const settingsRoute: HTMLElement = settingsRouteEl;
 const performanceRoute: HTMLElement = performanceRouteEl;
+const navSimToggle: HTMLButtonElement = navSimToggleEl;
 const navGame: HTMLAnchorElement = navGameEl;
 const navSettings: HTMLAnchorElement = navSettingsEl;
 const navPerformance: HTMLAnchorElement = navPerformanceEl;
@@ -523,6 +527,11 @@ function applyRoute(route: RouteName): void {
   navPerformance.classList.toggle("active", route === "performance");
 }
 
+function syncSimulationUi(): void {
+  navSimToggle.textContent = uiState.simulationRunning ? "||" : ">";
+  navSimToggle.setAttribute("aria-label", uiState.simulationRunning ? "Pause simulation" : "Start simulation");
+}
+
 function renderPerformanceRoute(stats: PerfStats): void {
   const simLabel = uiState.simulationRunning ? "Pause Simulation" : "Start Simulation";
   performanceCard.innerHTML = `
@@ -591,6 +600,12 @@ window.addEventListener("hashchange", () => {
   applyRoute(getRouteFromHash(window.location.hash));
 });
 
+navSimToggle.addEventListener("click", () => {
+  uiState.simulationRunning = !uiState.simulationRunning;
+  syncSimulationUi();
+  renderPerformanceRoute(lastPerfStats);
+});
+
 themeGrid.addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
@@ -605,6 +620,7 @@ performanceCard.addEventListener("click", (event) => {
   if (!(target instanceof HTMLElement)) return;
   if (target.id !== "sim-toggle") return;
   uiState.simulationRunning = !uiState.simulationRunning;
+  syncSimulationUi();
   renderPerformanceRoute(lastPerfStats);
 });
 
@@ -644,6 +660,7 @@ performanceCard.addEventListener("change", (event) => {
 
 setTheme(uiState.theme);
 applyRoute(getRouteFromHash(window.location.hash));
+syncSimulationUi();
 
 const vertexShaderSource = `
 attribute vec2 aPosition;
