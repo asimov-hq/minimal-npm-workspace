@@ -40,11 +40,14 @@ type PerfStats = {
   physicsMs: number;
   renderMs: number;
   resizeMs: number;
+  uiUpdateMs: number;
   substeps: number;
   walls: number;
   ramps: number;
   checkpoints: number;
   speed: number;
+  domWrites: number;
+  benchmarkMode: boolean;
 };
 
 const themes: Record<ThemeName, ThemeDef> = {
@@ -440,6 +443,10 @@ if (!glContext) throw new Error("WebGL not available");
 const gl: WebGLRenderingContext = glContext;
 
 const themeStorageKey = "asimov-mini-machines-theme";
+const searchParams = new URLSearchParams(window.location.search);
+const benchmarkMode = searchParams.get("benchmark") === "1";
+const showPerfInBenchmark = searchParams.get("perf") === "1";
+const PERF_MONITOR_INTERVAL_MS = 1000;
 
 function isThemeName(value: string): value is ThemeName {
   return Object.hasOwn(themes, value);
@@ -452,7 +459,8 @@ function loadTheme(): ThemeName {
 
 const uiState = {
   route: "game" as RouteName,
-  theme: loadTheme()
+  theme: loadTheme(),
+  benchmarkMode
 };
 
 function getRouteFromHash(hash: string): RouteName {
@@ -485,8 +493,10 @@ function applyRoute(route: RouteName): void {
   uiState.route = route;
   const onSettings = route === "settings";
   settingsRoute.classList.toggle("active", onSettings);
-  hud.style.display = onSettings ? "none" : "block";
-  perfPanel.style.display = onSettings ? "none" : "block";
+  const hideHud = onSettings || uiState.benchmarkMode;
+  const hidePerf = onSettings || (uiState.benchmarkMode && !showPerfInBenchmark);
+  hud.style.display = hideHud ? "none" : "block";
+  perfPanel.style.display = hidePerf ? "none" : "block";
   navGame.classList.toggle("active", route === "game");
   navSettings.classList.toggle("active", route === "settings");
 }
@@ -620,10 +630,12 @@ const perf = {
   physicsMs: 0,
   renderMs: 0,
   resizeMs: 0,
+  uiUpdateMs: 0,
   fps: 0,
   alpha: 0.12
 };
 const PHYSICS_SUBSTEPS = 10;
+let perfLastUpdatedAt = 0;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -922,6 +934,8 @@ function drawCircle(center: Vec2, radius: number, color: [number, number, number
 }
 
 function renderGameHud(input: InputState): void {
+  if (uiState.benchmarkMode || uiState.route !== "game") return;
+
   const speed = vecLength(car.vel);
   const connected = (navigator.getGamepads?.() ?? []).some(Boolean);
   hud.innerHTML = `
@@ -984,6 +998,9 @@ function renderScene(): void {
 }
 
 function updatePerfStats(stats: PerfStats): void {
+  if (uiState.route !== "game") return;
+  if (uiState.benchmarkMode && !showPerfInBenchmark) return;
+
   perfBody.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px">
       <div>FPS</div><div><strong>${stats.fps.toFixed(1)}</strong></div>
@@ -992,11 +1009,14 @@ function updatePerfStats(stats: PerfStats): void {
       <div>Physics CPU</div><div>${stats.physicsMs.toFixed(3)} ms</div>
       <div>Render CPU</div><div>${stats.renderMs.toFixed(3)} ms</div>
       <div>Resize CPU</div><div>${stats.resizeMs.toFixed(3)} ms</div>
+      <div>UI Update CPU</div><div>${stats.uiUpdateMs.toFixed(3)} ms</div>
       <div>Substeps</div><div>${stats.substeps}</div>
       <div>Walls</div><div>${stats.walls}</div>
       <div>Ramps</div><div>${stats.ramps}</div>
       <div>Checkpoints</div><div>${stats.checkpoints}</div>
       <div>Speed</div><div>${stats.speed.toFixed(1)}</div>
+      <div>DOM Writes</div><div>${stats.domWrites}</div>
+      <div>Benchmark</div><div>${stats.benchmarkMode ? "on" : "off"}</div>
     </div>
     <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--ui-border);color:var(--ui-muted)">
       Track hotspots while optimizing in this order: frame budget, physics substeps, collision count, render cost, then input overhead.
@@ -1007,6 +1027,7 @@ function updatePerfStats(stats: PerfStats): void {
 let lastTime = performance.now();
 function frame(now: number): void {
   const frameDeltaMs = now - lastTime;
+  let domWrites = 0;
 
   const resizeStart = performance.now();
   resize();
@@ -1027,7 +1048,11 @@ function frame(now: number): void {
   renderScene();
   const renderMs = performance.now() - renderStart;
 
-  renderGameHud(input);
+  const uiStart = performance.now();
+  if (!uiState.benchmarkMode && uiState.route === "game") {
+    renderGameHud(input);
+    domWrites += 1;
+  }
 
   const alpha = perf.alpha;
   perf.resizeMs = lerp(perf.resizeMs, resizeMs, alpha);
@@ -1036,20 +1061,31 @@ function frame(now: number): void {
   perf.renderMs = lerp(perf.renderMs, renderMs, alpha);
   perf.frameMs = lerp(perf.frameMs, frameDeltaMs, alpha);
   perf.fps = perf.frameMs > 0 ? 1000 / perf.frameMs : 0;
+  if (now - perfLastUpdatedAt >= PERF_MONITOR_INTERVAL_MS) {
+    if (uiState.route === "game" && (!uiState.benchmarkMode || showPerfInBenchmark)) {
+      updatePerfStats({
+        fps: perf.fps,
+        frameMs: perf.frameMs,
+        inputMs: perf.inputMs,
+        physicsMs: perf.physicsMs,
+        renderMs: perf.renderMs,
+        resizeMs: perf.resizeMs,
+        uiUpdateMs: perf.uiUpdateMs,
+        substeps: PHYSICS_SUBSTEPS,
+        walls: world.walls.length,
+        ramps: world.ramps.length,
+        checkpoints: world.checkpoints.length,
+        speed: vecLength(car.vel),
+        domWrites: domWrites + 1,
+        benchmarkMode: uiState.benchmarkMode
+      });
+      domWrites += 1;
+    }
+    perfLastUpdatedAt = now;
+  }
 
-  updatePerfStats({
-    fps: perf.fps,
-    frameMs: perf.frameMs,
-    inputMs: perf.inputMs,
-    physicsMs: perf.physicsMs,
-    renderMs: perf.renderMs,
-    resizeMs: perf.resizeMs,
-    substeps: PHYSICS_SUBSTEPS,
-    walls: world.walls.length,
-    ramps: world.ramps.length,
-    checkpoints: world.checkpoints.length,
-    speed: vecLength(car.vel)
-  });
+  const uiUpdateMs = performance.now() - uiStart;
+  perf.uiUpdateMs = lerp(perf.uiUpdateMs, uiUpdateMs, alpha);
 
   requestAnimationFrame(frame);
 }
