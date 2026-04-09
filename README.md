@@ -13,7 +13,7 @@
 
 ## example usage
 ```shellsession
-me@alpaca minimal-npm-workspace % ./scripts/copy-minimal-sample.sh ../my-awesome-new-project
+me@alpaca minimal-npm-workspace % ./scripts/copy.sh ../my-awesome-new-project
 Copied files:
   - .gitignore
   - tsconfig.base.json
