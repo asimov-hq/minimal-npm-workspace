@@ -7,6 +7,6 @@
 * blazing fast build time 
 
 ## example usage
-* !!scaffold for your coding agents!!
+* **scaffold for your coding agents**
 * scaffold for you 100% hand typed artisan organic ts project ;)
 * learn about npm workspaces (that was my motivation in creating this)
