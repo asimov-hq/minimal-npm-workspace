@@ -52,7 +52,7 @@ wizard23@battleship minimal-npm-workspace % cd ../my-awesome-new-project
 wizard23@battleship my-awesome-new-project % pi
 wizard23@battleship my-awesome-new-project % codex
 wizard23@battleship my-awesome-new-project % claude
-wizard23@battleship my-awesome-new-project % geminy
+wizard23@battleship my-awesome-new-project % gemini
 ```
 
 
