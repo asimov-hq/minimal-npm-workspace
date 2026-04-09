@@ -13,7 +13,7 @@
 
 ## example usage
 ```shellsession
-wizard23@alpaca minimal-npm-workspace % ./scripts/copy-minimal-sample.sh ../my-awesome-new-project
+me@alpaca minimal-npm-workspace % ./scripts/copy-minimal-sample.sh ../my-awesome-new-project
 Copied files:
   - .gitignore
   - tsconfig.base.json
@@ -47,12 +47,12 @@ Copied files:
   - packages/cli/tsconfig.build.json
   - packages/cli/tsconfig.json
   - packages/cli/src/main.ts
-wizard23@alpaca minimal-npm-workspace % cd ../my-awesome-new-project
+me@alpaca minimal-npm-workspace % cd ../my-awesome-new-project
 
-wizard23@alpaca my-awesome-new-project % pi
-wizard23@alpaca my-awesome-new-project % codex
-wizard23@alpaca my-awesome-new-project % claude
-wizard23@alpaca my-awesome-new-project % gemini
+me@alpaca my-awesome-new-project % pi
+me@alpaca my-awesome-new-project % codex
+me@alpaca my-awesome-new-project % claude
+me@alpaca my-awesome-new-project % gemini
 ```
 
 
