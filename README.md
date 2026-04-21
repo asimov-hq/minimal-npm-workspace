@@ -10,8 +10,9 @@ npm run dev:app
 ## highlights
 * minimal, clean setup for server, web, cli and shared packages
 * vite for the frontend (it is best by test)
-* almost no external dependencies apart from vite 
-* blazing fast startup time in dev mode
+* preact minimizes vanilla HTML/CSS code bloat since components can be extracted and reused  
+* almost no external dependencies apart from vite and preact
+* blazing fast startup and hot reload time in dev mode
 * blazing fast build time 
 
 ## possible applications
