@@ -1,4 +1,12 @@
 # minimal-npm-workspace
+## Quick start
+```
+git clone git@github.com:asimov-hq/minimal-npm-workspace.git
+cd minimal-npm-workspace
+npm install
+npm run dev:app
+```
+
 ## highlights
 * minimal, clean setup for server, web, cli and shared packages
 * vite for the frontend (it is best by test)
