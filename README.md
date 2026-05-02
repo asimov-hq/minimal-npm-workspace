@@ -57,10 +57,10 @@ Copied files:
   - packages/cli/tsconfig.json
   - packages/cli/src/main.ts
 me@alpaca minimal-npm-workspace % cd ../my-awesome-new-project
-me@alpaca my-awesome-new-project % pi
 me@alpaca my-awesome-new-project % codex
 me@alpaca my-awesome-new-project % claude
 me@alpaca my-awesome-new-project % gemini
+me@alpaca my-awesome-new-project % pi
 ```
 
 
