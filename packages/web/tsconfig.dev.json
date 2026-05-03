@@ -5,5 +5,5 @@
     "noEmit": true,
     "tsBuildInfoFile": "./.tsbuildinfo.dev"
   },
-  "references": [{ "path": "../shared" }]
+  "references": [{ "path": "../shared/tsconfig.dev.json" }]
 }

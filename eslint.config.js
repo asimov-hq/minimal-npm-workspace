@@ -4,17 +4,18 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
+      ".git/**",
       "dist/**",
       "packages/*/dist/**",
       "packages/*/dist-types/**",
       "packages/*/.vite/**",
+      "packages/*/.tsbuildinfo",
+      "packages/*/.tsbuildinfo.*",
       "node_modules/**",
       "cache/**",
       "public/**",
       "docs/**",
       "scripts/**",
-      "shell/**",
-      "src/core/solver/**",
     ],
   },
   js.configs.recommended,
@@ -28,12 +29,7 @@ export default tseslint.config(
       ecmaVersion: 2020,
       sourceType: "module",
       parserOptions: {
-        project: [
-          "./packages/cli/tsconfig.eslint.json",
-          "./packages/server/tsconfig.eslint.json",
-          "./packages/shared/tsconfig.eslint.json",
-          "./packages/web/tsconfig.eslint.json",
-        ],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
