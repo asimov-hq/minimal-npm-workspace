@@ -31,5 +31,18 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-floating-promises": "off",
     },
+  },
+  {
+    // plain node scripts (not part of a TS project)
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        URL: "readonly",
+      },
+    },
   }
 );

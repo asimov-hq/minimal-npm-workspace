@@ -94,6 +94,27 @@ memory — stop it before `remove-user`, or restart it afterwards.
 - config via env: `PORT` (3001), `HOST` (127.0.0.1), `JWT_SECRET` (**dev default — set your
   own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (`data`)
 
+## How the TypeScript wiring works
+
+This is the template's one non-obvious part. Each package has up to three tsconfigs:
+
+| file | used by | key idea |
+|---|---|---|
+| `tsconfig.json` | editor, `tsx` dev, eslint | `paths` maps workspace imports to **source** (`../shared/src/index.ts`), so dev and linting need no prebuild |
+| `tsconfig.build.json` | `npm run build` / `tsc -b` | empties `paths` (`{}`), so builds resolve workspace imports through node_modules to the **built** `dist` types; excludes test files |
+| `tsconfig.dev.json` | `npm run dev:ts` | `noEmit` watch variant for a fast type-checking loop |
+
+The root `tsconfig.json` is the `tsc -b` build graph (referencing each package's build
+config); the root `tsconfig.dev.json` is the watch graph. `shared` has no
+`tsconfig.build.json` on purpose — it imports nothing from the workspace, so it has no
+`paths` to empty. `web`'s build config uses `emitDeclarationOnly` because composite projects
+must emit *something* to participate in `tsc -b`; vite does the real bundling.
+
+The same dev/build split powers the CLI's import of the server's store:
+`@asimov/minimal-server/store` resolves to `../server/src/lib/store.ts` in dev (`paths`) and
+to `dist/lib/store.js` in builds (the server's `exports` map) — one persistence
+implementation, no duplication.
+
 ## Workspace highlights
 
 * minimal, clean setup for server, web, cli and shared packages
