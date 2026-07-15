@@ -113,6 +113,12 @@ npm run lint` passes.
 
 ### Phase 2 — make the manifest honest (deps match code)
 
+> **SUPERSEDED (2026-07-14):** direction reversed — the backend libs stay and become
+> load-bearing instead of being deleted. See
+> `2026-07-14--minimal-auth-todo-app.md` (implemented: fastify server with enforced JWT
+> auth, ajv validation, generated OpenAPI, JSON-file persistence, preact todo UI, tests).
+> The other phases of this plan remain valid follow-ups.
+
 **Goal:** every declared dependency is exercised by the example; the README claims become true.
 
 1. **Server:** delete the 8 unused dependencies. Replace the `console.log` with the smallest real
