@@ -93,6 +93,9 @@ memory — stop it before `remove-user`, or restart it afterwards.
   writes) — delete the directory to reset
 - config via env: `PORT` (3001), `HOST` (127.0.0.1), `JWT_SECRET` (**dev default — set your
   own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (`data`)
+- demo-scope auth, on purpose: logout is client-side only (a token stays valid until
+  `TOKEN_TTL` runs out — there is no revocation list) and login has no rate limiting.
+  Anything real needs both.
 
 ## How the TypeScript wiring works
 
