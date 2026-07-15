@@ -1,5 +1,7 @@
+import { existsSync } from "node:fs";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import fastifyJwt from "@fastify/jwt";
+import fastifyStatic from "@fastify/static";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { Ajv } from "ajv";
@@ -26,7 +28,21 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   app.setValidatorCompiler(({ schema }) => ajv.compile(schema));
 
   app.setErrorHandler(errorHandler);
-  app.setNotFoundHandler(notFoundHandler);
+
+  // in production the built web app is served from here; in dev vite serves
+  // it and proxies /v1 to this server
+  if (config.webDist !== undefined && existsSync(config.webDist)) {
+    await app.register(fastifyStatic, { root: config.webDist });
+    app.setNotFoundHandler((request, reply) => {
+      if (request.method === "GET" && !request.url.startsWith("/v1")) {
+        void reply.sendFile("index.html");
+        return;
+      }
+      notFoundHandler(request, reply);
+    });
+  } else {
+    app.setNotFoundHandler(notFoundHandler);
+  }
 
   await app.register(swagger, {
     openapi: {
