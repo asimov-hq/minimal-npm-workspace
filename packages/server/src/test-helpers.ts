@@ -6,7 +6,14 @@ import { buildApp } from "./app.js";
 import type { AppConfig } from "./config.js";
 
 export function testConfig(dataDir: string): AppConfig {
-  return { port: 0, host: "127.0.0.1", jwtSecret: "test-secret", dataDir, logger: false };
+  return {
+    port: 0,
+    host: "127.0.0.1",
+    jwtSecret: "test-secret",
+    tokenTtl: "10m",
+    dataDir,
+    logger: false,
+  };
 }
 
 export interface TestApp {

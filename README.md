@@ -88,7 +88,7 @@ memory — stop it before `remove-user`, or restart it afterwards.
 - persistence is JSON files in `packages/server/data/` (in-memory map, atomic tmp+rename
   writes) — delete the directory to reset
 - config via env: `PORT` (3001), `HOST` (127.0.0.1), `JWT_SECRET` (**dev default — set your
-  own in anything real**), `DATA_DIR` (`data`)
+  own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (`data`)
 
 ## Workspace highlights
 

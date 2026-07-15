@@ -57,7 +57,10 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   });
   await app.register(swaggerUi, { routePrefix: "/docs" });
 
-  await app.register(fastifyJwt, { secret: config.jwtSecret });
+  await app.register(fastifyJwt, {
+    secret: config.jwtSecret,
+    sign: { expiresIn: config.tokenTtl },
+  });
   app.decorate("authenticate", async (request: FastifyRequest) => {
     try {
       await request.jwtVerify();

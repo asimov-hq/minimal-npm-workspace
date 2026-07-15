@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rm } from "node:fs/promises";
+import { setTimeout as delay } from "node:timers/promises";
 import type { FastifyInstance } from "fastify";
 import type { User } from "@asimov/minimal-shared";
 import { buildApp } from "./app.js";
@@ -141,6 +142,40 @@ test("GET /v1/me returns the authenticated user", async () => {
     assert.ok(!res.body.includes("assword"), "no password material in response");
   } finally {
     await close();
+  }
+});
+
+test("tokens carry an expiry claim", async () => {
+  const { app, close } = await createTestApp();
+  try {
+    const res = await signup(app, { username: "alice", password: "hunter2hunter2" });
+    const { token } = res.json<AuthBody>().data;
+    const claims = app.jwt.decode<{ exp?: number; iat?: number }>(token);
+    assert.ok(claims?.exp !== undefined, "token has an exp claim");
+    assert.ok(claims.iat !== undefined && claims.exp > claims.iat);
+  } finally {
+    await close();
+  }
+});
+
+test("expired tokens are rejected with 401 problem+json", async () => {
+  const { app, dataDir } = await createTestApp();
+  await app.close();
+  const shortLived = await buildApp({ ...testConfig(dataDir), tokenTtl: "1ms" });
+  try {
+    const res = await signup(shortLived, { username: "alice", password: "hunter2hunter2" });
+    const { token } = res.json<AuthBody>().data;
+    await delay(50);
+    const me = await shortLived.inject({
+      method: "GET",
+      url: "/v1/me",
+      headers: { authorization: `Bearer ${token}` },
+    });
+    assert.equal(me.statusCode, 401);
+    assert.match(me.headers["content-type"] ?? "", /^application\/problem\+json/);
+  } finally {
+    await shortLived.close();
+    await rm(dataDir, { recursive: true, force: true });
   }
 });
 
