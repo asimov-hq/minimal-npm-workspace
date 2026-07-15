@@ -24,7 +24,8 @@
     "start:web": "npm run -w @asimov/minimal-web preview",
     "start:cli": "npm run -w @asimov/minimal-cli start",
 
-    "lint": "eslint . --cache"
+    "lint": "eslint . --cache",
+    "test": "npm run -ws --if-present test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

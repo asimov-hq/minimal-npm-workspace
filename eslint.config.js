@@ -40,5 +40,12 @@ export default tseslint.config(
     // rules: {
     //   "@typescript-eslint/no-floating-promises": "on",
     // },
+  },
+  {
+    // node:test's test() returns a promise that is intentionally not awaited
+    files: ["**/*.test.ts"],
+    rules: {
+      "@typescript-eslint/no-floating-promises": "off",
+    },
   }
 );
