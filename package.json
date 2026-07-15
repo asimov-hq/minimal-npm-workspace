@@ -1,6 +1,7 @@
 {
   "name": "@asimov/minimal-workspace",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "workspaces": [
     "packages/*"
