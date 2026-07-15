@@ -24,16 +24,17 @@
     "start:server": "npm run --workspace @asimov/minimal-server start",
     "start:web": "npm run --workspace @asimov/minimal-web preview",
     "start:cli": "npm run --workspace @asimov/minimal-cli start",
-
     "lint": "eslint . --cache",
     "test": "npm run --workspaces --if-present test",
-    "smoke:copy": "bash scripts/copy-smoke.sh"
+    "smoke:copy": "bash scripts/copy-smoke.sh",
+    "test:e2e": "node scripts/e2e-browser.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.8",
     "concurrently": "^9.2.0",
     "eslint": "^9.39.2",
+    "playwright": "^1.61.1",
     "tsx": "^4.8.1",
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.53.0"

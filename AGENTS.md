@@ -96,7 +96,10 @@ change, and less surprising than before.
   (Red–Green–Refactor), in `packages/server/src/*.test.ts` using node:test and
   `app.inject()` against `createTestApp()` (temp data dir per test).
 - Bug fixes come with a regression test.
-- For visual/interaction changes, verify manually in the browser and say what was checked.
+- For visual/interaction changes, verify manually in the browser and say what was checked —
+  or run `npm run test:e2e` (headless-browser suite; needs `npm run build` and a one-time
+  `npx playwright install chromium`). It is on-demand deep verification, not part of the
+  required gate order.
 - If a check cannot be run, say so and explain the remaining risk.
 
 ## Measurement Principles

@@ -36,7 +36,9 @@ npm run start:server   # fastify serves the built web app AND the API on :3001
 | `npm run dev:app` | server + web with hot reload (concurrently) |
 | `npm run dev:server` / `dev:web` / `dev:cli` | one package in dev mode |
 | `npm run build` | compile all packages + bundle the web app |
-| `npm test` | server tests (node:test via tsx, `app.inject()` + one real-socket smoke test) |
+| `npm test` | unit/integration tests (node:test via tsx, `app.inject()` + one real-socket smoke test) |
+| `npm run test:e2e` | headless-browser e2e (two tabs = two users); needs `npm run build` + `npx playwright install chromium` once |
+| `npm run smoke:copy` | copy the template to a temp dir and run all gates there |
 | `npm run typecheck` | `tsc -b` over the project-references graph |
 | `npm run lint` | eslint with typed rules |
 | `npm run clean` | remove build artifacts |
