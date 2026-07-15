@@ -5,6 +5,8 @@ A minimal npm-workspace scaffold (`server` / `web` / `cli` / `shared`) that ship
 verification. Each browser tab can be logged in as a different user.
 
 Meant as a starting point for coding agents (and humans): the wiring is real, small, and tested.
+Agent-facing working rules (verification order, kaizen approach, conventions) live in
+[`AGENTS.md`](AGENTS.md).
 
 ## Quick start
 
