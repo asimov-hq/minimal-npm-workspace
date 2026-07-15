@@ -25,7 +25,8 @@
     "start:cli": "npm run --workspace @asimov/minimal-cli start",
 
     "lint": "eslint . --cache",
-    "test": "npm run --workspaces --if-present test"
+    "test": "npm run --workspaces --if-present test",
+    "smoke:copy": "bash scripts/copy-smoke.sh"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

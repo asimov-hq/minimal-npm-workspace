@@ -109,13 +109,22 @@ memory — stop it before `remove-user`, or restart it afterwards.
 
 ## Copy it
 
+`copy.sh` copies every git-tracked file (via `git ls-files`) except the template-local
+`docs/`, `README.md`, and `LICENSE` — so the copy always matches the repo, build artifacts
+never sneak in, and `AGENTS.md` + all configs come along. `npm run smoke:copy` proves the
+copy passes all gates on its own (CI runs it too).
+
 ```shellsession
 me@alpaca minimal-npm-workspace % ./scripts/copy.sh ../my-awesome-new-project
 Copied files:
+  - .github/workflows/ci.yml
   - .gitignore
-  - tsconfig.base.json
+  - AGENTS.md
+  - eslint.config.js
   - package.json
-  - packages/… (the template sources)
+  - packages/… (all package sources and configs)
+  - scripts/copy.sh
+  - tsconfig.base.json …
 me@alpaca minimal-npm-workspace % cd ../my-awesome-new-project
 me@alpaca my-awesome-new-project % claude
 ```

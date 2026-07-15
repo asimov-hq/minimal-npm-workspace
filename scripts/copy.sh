@@ -44,52 +44,29 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root_dir="$(cd "$script_dir/.." && pwd)"
 
-src_gitignore="$root_dir/.gitignore"
-src_tsconfig="$root_dir/tsconfig.base.json"
-src_package="$root_dir/package.json"
-src_packages_dir="$root_dir/packages"
+if ! git -C "$root_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "Error: not a git checkout — the file list comes from 'git ls-files'." >&2
+  exit 1
+fi
 
-if [[ ! -e "$src_gitignore" || ! -e "$src_tsconfig" || ! -e "$src_package" || ! -d "$src_packages_dir" ]]; then
-  echo "Error: source files not found. Run this script from the repository." >&2
+# git tracks exactly the template's files, so use it as the single source of
+# truth; only template-local files are excluded (a new project writes its own)
+mapfile -t files < <(git -C "$root_dir" ls-files | grep -v -E '^(docs/|README\.md$|LICENSE$)')
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "Error: 'git ls-files' returned nothing." >&2
   exit 1
 fi
 
 mkdir -p "$dest"
 
-fail_if_exists() {
-  local path="$1"
-  if [[ -e "$path" ]]; then
-    return 0
-  fi
-  return 1
-}
-
 if ! $overwrite; then
   existing=()
-
-  if fail_if_exists "$dest/.gitignore"; then
-    existing+=(".gitignore")
-  fi
-  if fail_if_exists "$dest/tsconfig.base.json"; then
-    existing+=("tsconfig.base.json")
-  fi
-  if fail_if_exists "$dest/package.json"; then
-    existing+=("package.json")
-  fi
-
-  while IFS= read -r rel_path; do
-    if fail_if_exists "$dest/$rel_path"; then
+  for rel_path in "${files[@]}"; do
+    if [[ -e "$dest/$rel_path" ]]; then
       existing+=("$rel_path")
     fi
-  done < <(
-    cd "$src_packages_dir" && \
-    find . \
-      -path "*/node_modules/*" -prune -o \
-      -path "*/.vite/*" -prune -o \
-      -path "*/dist/*" -prune -o \
-      -type f -print | sed 's|^\./|packages/|'
-  )
-
+  done
   if [[ ${#existing[@]} -gt 0 ]]; then
     echo "Error: destination already contains the following files:" >&2
     for item in "${existing[@]}"; do
@@ -98,41 +75,12 @@ if ! $overwrite; then
     echo "Use --overwrite to replace." >&2
     exit 1
   fi
-else
-  rm -f "$dest/.gitignore" "$dest/tsconfig.base.json" "$dest/package.json"
-  if [[ -d "$dest/packages" ]]; then
-    for entry in "$src_packages_dir"/*; do
-      name="$(basename "$entry")"
-      rm -rf "$dest/packages/$name"
-    done
-  fi
 fi
 
-cp "$src_gitignore" "$dest/.gitignore"
-cp "$src_tsconfig" "$dest/tsconfig.base.json"
-cp "$src_package" "$dest/package.json"
-
-mkdir -p "$dest/packages"
-(
-  cd "$src_packages_dir"
-  tar \
-    --exclude="node_modules" \
-    --exclude=".vite" \
-    --exclude="dist" \
-    -cf - .
-) | (cd "$dest/packages" && tar -xf -)
+for rel_path in "${files[@]}"; do
+  mkdir -p "$dest/$(dirname "$rel_path")"
+  cp "$root_dir/$rel_path" "$dest/$rel_path"
+done
 
 echo "Copied files:"
-echo "  - .gitignore"
-echo "  - tsconfig.base.json"
-echo "  - package.json"
-while IFS= read -r rel_path; do
-  echo "  - $rel_path"
-done < <(
-  cd "$src_packages_dir" && \
-  find . \
-    -path "*/node_modules/*" -prune -o \
-    -path "*/.vite/*" -prune -o \
-    -path "*/dist/*" -prune -o \
-    -type f -print | sed 's|^\./|packages/|'
-)
+printf '  - %s\n' "${files[@]}"
