@@ -12,7 +12,7 @@
     "build": "tsc -b && npm run -w @asimov/minimal-web build",
     "build:packages": "npm run -ws build",
     "build:ts": "tsc -b",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b",
     "typecheck:packages": "npm run -ws typecheck",
     "clean": "npm run -ws clean",
     "dev:ts": "tsc -b -w tsconfig.dev.json",

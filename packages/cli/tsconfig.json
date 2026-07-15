@@ -7,7 +7,7 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@asimov/minimal-shared": ["../shared/src"]
+      "@asimov/minimal-shared": ["../shared/src/index.ts"]
     },
     "types": ["node"]
   },
