@@ -1,12 +1,15 @@
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
+import fastifyJwt from "@fastify/jwt";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { Ajv } from "ajv";
 // ajv-formats is CJS-only; under NodeNext the callable plugin sits on .default
 import ajvFormats from "ajv-formats";
 const addFormats = ajvFormats.default;
+import { registerAuthRoutes, type UserRecord } from "./auth/routes.js";
 import type { AppConfig } from "./config.js";
-import { errorHandler, notFoundHandler } from "./lib/problem.js";
+import { errorHandler, notFoundHandler, Problem } from "./lib/problem.js";
+import { createStore } from "./lib/store.js";
 
 export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   const app = Fastify({ logger: config.logger });
@@ -35,6 +38,18 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
     },
   });
   await app.register(swaggerUi, { routePrefix: "/docs" });
+
+  await app.register(fastifyJwt, { secret: config.jwtSecret });
+  app.decorate("authenticate", async (request: FastifyRequest) => {
+    try {
+      await request.jwtVerify();
+    } catch {
+      throw new Problem(401, "Unauthorized", "missing or invalid bearer token");
+    }
+  });
+
+  const users = await createStore<UserRecord>(config.dataDir, "users");
+  registerAuthRoutes(app, users);
 
   app.get("/healthz", {
     schema: {
