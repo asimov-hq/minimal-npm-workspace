@@ -3,8 +3,6 @@
   "private": true,
   "type": "module",
   "version": "0.0.0",
-  "main": "./dist/main.js",
-  "types": "./dist/main.d.ts",
   "exports": {
     ".": {
       "types": "./dist/main.d.ts",
@@ -17,7 +15,6 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('dist',{recursive:true,force:true}))\"",
     "dev": "tsx watch --clear-screen=false src/main.ts",
     "start": "node dist/main.js",
