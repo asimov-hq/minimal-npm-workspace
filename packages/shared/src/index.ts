@@ -10,3 +10,12 @@ export interface User {
   email?: string;
   createdAt: string;
 }
+
+export interface Todo {
+  id: string;
+  ownerId: string;
+  title: string;
+  done: boolean;
+  tags: string[];
+  createdAt: string;
+}

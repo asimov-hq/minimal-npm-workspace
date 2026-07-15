@@ -6,8 +6,10 @@ import { Ajv } from "ajv";
 // ajv-formats is CJS-only; under NodeNext the callable plugin sits on .default
 import ajvFormats from "ajv-formats";
 const addFormats = ajvFormats.default;
+import type { Todo } from "@asimov/minimal-shared";
 import { registerAuthRoutes, type UserRecord } from "./auth/routes.js";
 import type { AppConfig } from "./config.js";
+import { registerTodoRoutes } from "./todos/routes.js";
 import { errorHandler, notFoundHandler, Problem } from "./lib/problem.js";
 import { createStore } from "./lib/store.js";
 
@@ -15,7 +17,7 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   const app = Fastify({ logger: config.logger });
 
   const ajv = new Ajv({
-    coerceTypes: "array",
+    coerceTypes: true,
     useDefaults: true,
     removeAdditional: true,
     allErrors: false,
@@ -50,6 +52,9 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
 
   const users = await createStore<UserRecord>(config.dataDir, "users");
   registerAuthRoutes(app, users);
+
+  const todos = await createStore<Todo>(config.dataDir, "todos");
+  registerTodoRoutes(app, todos);
 
   app.get("/healthz", {
     schema: {
