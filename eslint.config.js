@@ -4,17 +4,11 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
-      "dist/**",
+      "node_modules/**",
       "packages/*/dist/**",
       "packages/*/dist-types/**",
       "packages/*/.vite/**",
-      "node_modules/**",
-      "cache/**",
-      "public/**",
-      "docs/**",
-      "scripts/**",
-      "shell/**",
-      "src/core/solver/**",
+      "packages/*/.tsbuildinfo*",
     ],
   },
   js.configs.recommended,
@@ -25,21 +19,11 @@ export default tseslint.config(
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
-      ecmaVersion: 2020,
-      sourceType: "module",
       parserOptions: {
-        project: [
-          "./packages/cli/tsconfig.eslint.json",
-          "./packages/server/tsconfig.eslint.json",
-          "./packages/shared/tsconfig.eslint.json",
-          "./packages/web/tsconfig.eslint.json",
-        ],
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    // rules: {
-    //   "@typescript-eslint/no-floating-promises": "on",
-    // },
   },
   {
     // node:test's test() returns a promise that is intentionally not awaited

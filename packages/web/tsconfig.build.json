@@ -8,5 +8,6 @@
     "tsBuildInfoFile": "./.tsbuildinfo",
     "paths": {}
   },
+  "exclude": ["vite.config.ts"],
   "references": [{ "path": "../shared" }]
 }
