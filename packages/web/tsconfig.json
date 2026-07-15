@@ -11,7 +11,7 @@
     "paths": {
       "@asimov/minimal-shared": ["../shared/src"]
     },
-    "types": ["vite/client"]
+    "types": ["vite/client", "node"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
 }

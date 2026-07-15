@@ -14,7 +14,7 @@ export interface AppConfig {
 
 export function envConfig(): AppConfig {
   return {
-    port: Number(process.env.PORT ?? 3001),
+    port: Number(process.env.PORT ?? process.env.API_PORT ?? 3001),
     host: process.env.HOST ?? "127.0.0.1",
     jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-me",
     tokenTtl: process.env.TOKEN_TTL ?? "7d",

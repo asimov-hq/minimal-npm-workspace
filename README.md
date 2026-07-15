@@ -18,7 +18,9 @@ npm run dev:app
 ```
 
 Open http://localhost:8888 — vite serves the preact app and proxies `/v1` to the fastify server
-on port 3001. API docs live at http://localhost:3001/docs.
+on port 3001. API docs live at http://localhost:3001/docs. If 3001 is taken on your machine,
+`API_PORT=3111 npm run dev:app` moves the server and the proxy together (`PORT` still wins
+server-side).
 
 Production-style, one process:
 

@@ -15,7 +15,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/v1": "http://localhost:3001"
+      // API_PORT moves the server and this proxy together (see README)
+      "/v1": `http://localhost:${process.env.API_PORT ?? "3001"}`
     },
     fs: {
       allow: [resolve(__dirname, "..")]
