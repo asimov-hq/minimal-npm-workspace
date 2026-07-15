@@ -63,6 +63,21 @@ Explore it live at `/docs` (OpenAPI generated from the route schemas — never h
 | `DELETE /v1/todos/:id` | Bearer | → 204 |
 | `GET /healthz` | – | liveness |
 
+## Admin CLI
+
+`packages/cli` is a small admin tool over the server's data files (build first, or use
+`npm run dev:cli --`):
+
+```
+npx my-app users                                    # list all users
+npx my-app todos alice --tag home                   # a user's todos, filtered by tag
+npx my-app todos alice --open                       # only unfinished (--done for finished)
+npx my-app remove-user bob                          # delete a user AND their todos
+```
+
+`--data-dir <dir>` (or `DATA_DIR`) selects the data directory. The server keeps data in
+memory — stop it before `remove-user`, or restart it afterwards.
+
 ## Server notes
 
 - fastify 5 with an `authenticate` decorator (`@fastify/jwt`); protected routes 401 with
