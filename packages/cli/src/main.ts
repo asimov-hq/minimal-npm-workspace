@@ -18,7 +18,7 @@ Usage:
   asimov remove-user <username>                  delete a user AND their todos
 
 Options:
-  --data-dir <dir>   data directory (default: $DATA_DIR or packages/server/data)
+  --data-dir <dir>   data directory (default: $DATA_DIR, or <workspace root>/data)
   -h, --help         show this help
 
 Note: the server keeps data in memory — stop it before remove-user

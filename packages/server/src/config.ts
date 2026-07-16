@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { resolveDataDir } from "./lib/workspace.js";
 
 export interface AppConfig {
   port: number;
@@ -18,7 +19,7 @@ export function envConfig(): AppConfig {
     host: process.env.HOST ?? "127.0.0.1",
     jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-me",
     tokenTtl: process.env.TOKEN_TTL ?? "7d",
-    dataDir: process.env.DATA_DIR ?? "data",
+    dataDir: resolveDataDir(),
     webDist: fileURLToPath(new URL("../../web/dist", import.meta.url)),
     logger: true,
   };

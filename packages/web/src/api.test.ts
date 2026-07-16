@@ -22,7 +22,7 @@ function stubFetch(status: number, body: unknown): RecordedCall[] {
   const calls: RecordedCall[] = [];
   globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     calls.push({
-      url: String(input),
+      url: typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
       ...(init?.method !== undefined ? { method: init.method } : {}),
       headers: (init?.headers ?? {}) as Record<string, string>,
       ...(typeof init?.body === "string" ? { body: init.body } : {}),

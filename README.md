@@ -89,10 +89,15 @@ memory — stop it before `remove-user`, or restart it afterwards.
 - request validation via ajv + ajv-formats (`setValidatorCompiler`), schemas inline on routes
 - passwords are scrypt-hashed (`node:crypto`, per-user salt, timing-safe compare) and never
   leave the server
-- persistence is JSON files in `packages/server/data/` (in-memory map, atomic tmp+rename
-  writes) — delete the directory to reset
+- persistence is JSON files in `data/` at the workspace root (in-memory map, atomic
+  tmp+rename writes) — delete the directory to reset. The location is resolved by walking up
+  to the `package.json` with a `workspaces` field, then: `DATA_DIR` env >
+  `"config": {"dataDir": …}` in the root package.json > `data/`. Server and CLI share the
+  resolver, so they always agree. Data is untracked by design; `git add -f data/todos.json`
+  if you ever want a snapshot in history (never commit real accounts — `users.json` holds
+  password hashes)
 - config via env: `PORT` (3001), `HOST` (127.0.0.1), `JWT_SECRET` (**dev default — set your
-  own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (`data`)
+  own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (see above)
 - demo-scope auth, on purpose: logout is client-side only (a token stays valid until
   `TOKEN_TTL` runs out — there is no revocation list) and login has no rate limiting.
   Anything real needs both.

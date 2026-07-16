@@ -10,8 +10,9 @@ packages/*/.vite/
 # tool caches
 .eslintcache
 
-# server JSON-file persistence
-packages/server/data/
+# server JSON-file persistence (config.dataDir in package.json; untracked by
+# design — `git add -f` a snapshot if you ever want one in history)
+/data/
 
 # local environment & noise
 .env

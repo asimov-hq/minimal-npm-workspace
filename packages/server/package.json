@@ -11,6 +11,10 @@
     "./store": {
       "types": "./dist/lib/store.d.ts",
       "default": "./dist/lib/store.js"
+    },
+    "./workspace": {
+      "types": "./dist/lib/workspace.d.ts",
+      "default": "./dist/lib/workspace.js"
     }
   },
   "scripts": {

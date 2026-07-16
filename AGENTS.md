@@ -50,7 +50,9 @@ Rules:
   `request.body`.
 - **Auth**: protected routes use `preHandler: [app.authenticate]` and read
   `request.user.sub`. Owner-scope every data access; other users' records answer 404.
-- **Persistence**: JSON files in `packages/server/data/` (gitignored — delete to reset)
+- **Persistence**: JSON files in `data/` at the workspace root (gitignored — delete to
+  reset). Location precedence: `DATA_DIR` env > root package.json `config.dataDir` > `data/`;
+  resolved by `packages/server/src/lib/workspace.ts`, which server and CLI both use.
   through `createStore` (in-memory Map, atomic tmp+rename writes). The server loads data at
   startup and won't see external file edits until restarted.
 - **Secrets**: `JWT_SECRET` has a dev default; anything deployed must set its own.

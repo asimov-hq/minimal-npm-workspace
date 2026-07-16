@@ -1,6 +1,6 @@
-import { fileURLToPath } from "node:url";
 import { matchesTodoFilter, type Todo, type TodoFilter, type User } from "@asimov/shared";
 import { createStore, type Store } from "@asimov/server/store";
+import { resolveDataDir } from "@asimov/server/workspace";
 
 // users.json records carry a passwordHash the CLI never reads or prints
 type UserRecord = User & { passwordHash?: string };
@@ -17,8 +17,9 @@ export interface Stores {
   todos: Store<Todo>;
 }
 
+// same resolver as the server, so the two can never point at different data
 export function defaultDataDir(): string {
-  return process.env.DATA_DIR ?? fileURLToPath(new URL("../../server/data", import.meta.url));
+  return resolveDataDir();
 }
 
 export async function openStores(dataDir: string): Promise<Stores> {

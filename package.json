@@ -9,6 +9,9 @@
   "engines": {
     "node": ">=22"
   },
+  "config": {
+    "dataDir": "data"
+  },
   "scripts": {
     "build": "tsc -b && npm run --workspace @asimov/web build",
     "typecheck": "tsc -b",

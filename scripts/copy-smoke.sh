@@ -23,7 +23,7 @@ done
 # ... and neither template-local files nor build artifacts
 for mustnot in README.md LICENSE docs node_modules \
                packages/server/dist packages/web/dist packages/web/dist-types \
-               packages/server/data; do
+               data; do
   if [[ -e "$tmp/project/$mustnot" ]]; then
     echo "FAIL: copy contains $mustnot" >&2
     exit 1
