@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import type { Todo, User } from "@asimov/shared";
+import { matchesTodoFilter, type Todo, type TodoFilter, type User } from "@asimov/shared";
 import { createStore, type Store } from "@asimov/server/store";
 
 // users.json records carry a passwordHash the CLI never reads or prints
@@ -51,18 +51,11 @@ export function listUsers(stores: Stores): User[] {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export interface TodoFilter {
-  tag?: string;
-  done?: boolean;
-}
-
 export function findTodos(stores: Stores, username: string, filter: TodoFilter = {}): Todo[] {
   const user = requireUser(stores, username);
   return stores.todos
     .values()
-    .filter((t) => t.ownerId === user.id)
-    .filter((t) => filter.tag === undefined || t.tags.includes(filter.tag))
-    .filter((t) => filter.done === undefined || t.done === filter.done)
+    .filter((t) => t.ownerId === user.id && matchesTodoFilter(t, filter))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 

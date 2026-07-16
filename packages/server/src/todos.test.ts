@@ -95,6 +95,21 @@ test("GET lists only the caller's todos", async () => {
   });
 });
 
+test("tags are normalized on write (trimmed, deduped)", async () => {
+  await withApp(async (app) => {
+    const token = await signupToken(app, "alice");
+    const created = await createTodo(app, token, { title: "x", tags: [" a", "a ", "b"] });
+    assert.deepEqual(created.tags, ["a", "b"]);
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/v1/todos/${created.id}`,
+      headers: auth(token),
+      payload: { tags: ["c", " c "] },
+    });
+    assert.deepEqual(res.json<TodoBody>().data.todo.tags, ["c"]);
+  });
+});
+
 test("PATCH updates title, done, and tags", async () => {
   await withApp(async (app) => {
     const token = await signupToken(app, "alice");

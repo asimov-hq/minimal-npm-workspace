@@ -108,9 +108,9 @@ This is the template's one non-obvious part. Each package has up to three tsconf
 | `tsconfig.dev.json` | `npm run dev:ts` | `noEmit` watch variant for a fast type-checking loop |
 
 The root `tsconfig.json` is the `tsc -b` build graph (referencing each package's build
-config); the root `tsconfig.dev.json` is the watch graph. `shared` has no
-`tsconfig.build.json` on purpose — it imports nothing from the workspace, so it has no
-`paths` to empty. `web`'s build config uses `emitDeclarationOnly` because composite projects
+config); the root `tsconfig.dev.json` is the watch graph. `shared` imports nothing from the
+workspace, so its build config has no `paths` to empty — it exists only to exclude the test
+files from `dist`. `web`'s build config uses `emitDeclarationOnly` because composite projects
 must emit *something* to participate in `tsc -b`; vite does the real bundling.
 
 The same dev/build split powers the CLI's import of the server's store:

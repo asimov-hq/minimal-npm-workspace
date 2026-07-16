@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import type { Todo } from "@asimov/shared";
+import { normalizeTags, type Todo } from "@asimov/shared";
 import { Problem } from "../lib/problem.js";
 import type { Store } from "../lib/store.js";
 
@@ -102,7 +102,7 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
       ownerId: request.user.sub,
       title: request.body.title,
       done: false,
-      tags: request.body.tags ?? [],
+      tags: normalizeTags(request.body.tags ?? []),
       createdAt: new Date().toISOString(),
     };
     await todos.set(todo.id, todo);
@@ -134,7 +134,7 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
         ...todo,
         title: title ?? todo.title,
         done: done ?? todo.done,
-        tags: tags ?? todo.tags,
+        tags: tags !== undefined ? normalizeTags(tags) : todo.tags,
       };
       await todos.set(updated.id, updated);
       return { data: { todo: updated } };

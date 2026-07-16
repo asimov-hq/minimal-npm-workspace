@@ -1,21 +1,3 @@
-export function hello(name: string): string {
-  return `(from shared): Hello, ${name}!`;
-}
-
-export const USERNAME_PATTERN = "^[a-z0-9_-]{3,20}$";
-
-export interface User {
-  id: string;
-  username: string;
-  email?: string;
-  createdAt: string;
-}
-
-export interface Todo {
-  id: string;
-  ownerId: string;
-  title: string;
-  done: boolean;
-  tags: string[];
-  createdAt: string;
-}
+export * from "./api.js";
+export * from "./todos.js";
+export * from "./users.js";

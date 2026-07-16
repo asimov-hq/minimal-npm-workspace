@@ -1,5 +1,13 @@
 import { useEffect, useState } from "preact/hooks";
-import { hello, type Todo, type User } from "@asimov/shared";
+import {
+  matchesTodoFilter,
+  parseTags,
+  PASSWORD_MIN_LENGTH,
+  validatePassword,
+  validateUsername,
+  type Todo,
+  type User,
+} from "@asimov/shared";
 import * as api from "./api";
 
 export function App() {
@@ -31,7 +39,6 @@ export function App() {
       ) : (
         <TodoScreen user={user} onLogout={logout} />
       )}
-      <footer>{hello("web")}</footer>
     </main>
   );
 }
@@ -48,10 +55,14 @@ function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
   const signup = mode === "signup";
   const mismatch = signup && confirm !== "" && password !== confirm;
   const incomplete = username === "" || password === "" || (signup && confirm === "");
+  // the same shared rules the server enforces, checked before the round-trip
+  const usernameError = signup && username !== "" ? validateUsername(username) : null;
+  const passwordError = signup && password !== "" ? validatePassword(password) : null;
+  const invalid = usernameError !== null || passwordError !== null;
 
   async function submit(event: Event) {
     event.preventDefault();
-    if (busy || mismatch || incomplete) return;
+    if (busy || mismatch || incomplete || invalid) return;
     setBusy(true);
     setError(null);
     try {
@@ -120,7 +131,7 @@ function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
             value={password}
             onInput={(e) => setPassword(e.currentTarget.value)}
             autocomplete={signup ? "new-password" : "current-password"}
-            placeholder="at least 8 characters"
+            placeholder={`at least ${PASSWORD_MIN_LENGTH} characters`}
           />
         </label>
         {signup && (
@@ -134,9 +145,11 @@ function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
             />
           </label>
         )}
+        {usernameError !== null && <p class="error">Username: {usernameError}</p>}
+        {passwordError !== null && <p class="error">Password: {passwordError}</p>}
         {mismatch && <p class="error">Passwords don't match.</p>}
         {error !== null && <p class="error">{error}</p>}
-        <button type="submit" disabled={busy || mismatch || incomplete}>
+        <button type="submit" disabled={busy || mismatch || incomplete || invalid}>
           {signup ? "Create account" : "Log in"}
         </button>
       </form>
@@ -170,7 +183,7 @@ function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
     event.preventDefault();
     const trimmed = title.trim();
     if (trimmed === "") return;
-    const tagList = [...new Set(tags.split(",").map((t) => t.trim()).filter(Boolean))];
+    const tagList = parseTags(tags);
     try {
       const { todo } = await api.createTodo(
         tagList.length > 0 ? { title: trimmed, tags: tagList } : { title: trimmed },
@@ -202,7 +215,7 @@ function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
     }
   }
 
-  const visible = filter === null ? todos : todos.filter((t) => t.tags.includes(filter));
+  const visible = todos.filter((t) => matchesTodoFilter(t, filter === null ? {} : { tag: filter }));
 
   return (
     <section class="card todos">

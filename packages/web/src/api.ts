@@ -1,4 +1,4 @@
-import type { Todo, User } from "@asimov/shared";
+import type { Envelope, ProblemBody, Todo, User } from "@asimov/shared";
 
 // sessionStorage is per-tab, so each tab can hold its own logged-in user
 const TOKEN_KEY = "token";
@@ -22,11 +22,6 @@ export class ApiError extends Error {
   }
 }
 
-interface ProblemBody {
-  title?: string;
-  detail?: string;
-}
-
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getToken();
@@ -43,7 +38,7 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
     const problem = json as ProblemBody;
     throw new ApiError(res.status, problem.detail ?? problem.title ?? res.statusText);
   }
-  return (json as { data: T }).data;
+  return (json as Envelope<T>).data;
 }
 
 export interface Credentials {

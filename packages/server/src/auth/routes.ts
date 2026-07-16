@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { USERNAME_PATTERN, type User } from "@asimov/shared";
+import { PASSWORD_MIN_LENGTH, USERNAME_PATTERN, type User } from "@asimov/shared";
 import { hashPassword, verifyPassword } from "../lib/password.js";
 import { Problem } from "../lib/problem.js";
 import type { Store } from "../lib/store.js";
@@ -45,7 +45,7 @@ const authResponseSchema = {
 
 const credentialProperties = {
   username: { type: "string", pattern: USERNAME_PATTERN },
-  password: { type: "string", minLength: 8 },
+  password: { type: "string", minLength: PASSWORD_MIN_LENGTH },
 } as const;
 
 function toPublicUser(record: UserRecord): User {

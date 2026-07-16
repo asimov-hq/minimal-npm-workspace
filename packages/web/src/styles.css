@@ -30,13 +30,6 @@ h1 {
   font-size: 1.4rem;
 }
 
-footer {
-  margin-top: 1.5rem;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #a1a1aa;
-}
-
 button {
   font: inherit;
   cursor: pointer;

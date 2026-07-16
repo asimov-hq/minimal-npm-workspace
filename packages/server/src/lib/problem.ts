@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
+import type { ProblemBody } from "@asimov/shared";
 
 /** Throwable RFC 7807 error; the central error handler turns it into application/problem+json. */
 export class Problem extends Error {
@@ -28,7 +29,7 @@ function send(
   title: string,
   detail?: string,
 ): void {
-  const body: Record<string, unknown> = {
+  const body: ProblemBody = {
     type: "about:blank",
     title,
     status,

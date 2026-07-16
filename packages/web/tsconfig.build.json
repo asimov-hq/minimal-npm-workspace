@@ -9,5 +9,5 @@
     "paths": {}
   },
   "exclude": ["vite.config.ts"],
-  "references": [{ "path": "../shared" }]
+  "references": [{ "path": "../shared/tsconfig.build.json" }]
 }

@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import type { Todo, User } from "@asimov/shared";
+import type { Todo, TodoFilter, User } from "@asimov/shared";
 import {
   CliError,
   defaultDataDir,
@@ -7,7 +7,6 @@ import {
   listUsers,
   openStores,
   removeUser,
-  type TodoFilter,
 } from "./commands.js";
 
 const USAGE = `asimov — admin CLI for the todo server's data files
