@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { rm } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import type { FastifyInstance } from "fastify";
-import type { User } from "@asimov/minimal-shared";
+import type { User } from "@asimov/shared";
 import { buildApp } from "./app.js";
 import { createTestApp, testConfig } from "./test-helpers.js";
 

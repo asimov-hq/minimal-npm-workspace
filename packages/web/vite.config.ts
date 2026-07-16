@@ -7,11 +7,11 @@ export default defineConfig({
   plugins: [preact()],
   resolve: {
     alias: {
-      "@asimov/minimal-shared": resolve(__dirname, "../shared/src")
+      "@asimov/shared": resolve(__dirname, "../shared/src")
     }
   },
   optimizeDeps: {
-    exclude: ["@asimov/minimal-shared"]
+    exclude: ["@asimov/shared"]
   },
   server: {
     proxy: {

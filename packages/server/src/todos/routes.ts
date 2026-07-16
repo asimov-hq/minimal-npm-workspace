@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import type { Todo } from "@asimov/minimal-shared";
+import type { Todo } from "@asimov/shared";
 import { Problem } from "../lib/problem.js";
 import type { Store } from "../lib/store.js";
 

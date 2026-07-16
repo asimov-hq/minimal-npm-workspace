@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import type { Todo, User } from "@asimov/minimal-shared";
+import type { Todo, User } from "@asimov/shared";
 import {
   CliError,
   defaultDataDir,
@@ -10,13 +10,13 @@ import {
   type TodoFilter,
 } from "./commands.js";
 
-const USAGE = `my-app — admin CLI for the todo server's data files
+const USAGE = `asimov — admin CLI for the todo server's data files
 
 Usage:
-  my-app users                                   list all users
-  my-app todos <username> [--tag <tag>] [--done | --open]
+  asimov users                                   list all users
+  asimov todos <username> [--tag <tag>] [--done | --open]
                                                  list a user's todos, filtered
-  my-app remove-user <username>                  delete a user AND their todos
+  asimov remove-user <username>                  delete a user AND their todos
 
 Options:
   --data-dir <dir>   data directory (default: $DATA_DIR or packages/server/data)
@@ -65,7 +65,7 @@ async function main(): Promise<number> {
       return 0;
     }
     case "todos": {
-      if (username === undefined) throw new CliError("usage: my-app todos <username> [--tag <tag>] [--done | --open]");
+      if (username === undefined) throw new CliError("usage: asimov todos <username> [--tag <tag>] [--done | --open]");
       const filter: TodoFilter = {};
       if (values.tag !== undefined) filter.tag = values.tag;
       if (values.done === true) filter.done = true;
@@ -76,7 +76,7 @@ async function main(): Promise<number> {
       return 0;
     }
     case "remove-user": {
-      if (username === undefined) throw new CliError("usage: my-app remove-user <username>");
+      if (username === undefined) throw new CliError("usage: asimov remove-user <username>");
       const { user, removedTodos } = await removeUser(stores, username);
       console.log(`removed user ${user.username} (${user.id}) and ${removedTodos} todo(s)`);
       return 0;

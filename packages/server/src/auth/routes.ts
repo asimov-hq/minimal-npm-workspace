@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { USERNAME_PATTERN, type User } from "@asimov/minimal-shared";
+import { USERNAME_PATTERN, type User } from "@asimov/shared";
 import { hashPassword, verifyPassword } from "../lib/password.js";
 import { Problem } from "../lib/problem.js";
 import type { Store } from "../lib/store.js";

@@ -7,8 +7,8 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@asimov/minimal-shared": ["../shared/src/index.ts"],
-      "@asimov/minimal-server/store": ["../server/src/lib/store.ts"]
+      "@asimov/shared": ["../shared/src/index.ts"],
+      "@asimov/server/store": ["../server/src/lib/store.ts"]
     },
     "types": ["node"]
   },

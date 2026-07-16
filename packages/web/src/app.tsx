@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { hello, type Todo, type User } from "@asimov/minimal-shared";
+import { hello, type Todo, type User } from "@asimov/shared";
 import * as api from "./api";
 
 export function App() {

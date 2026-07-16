@@ -9,7 +9,7 @@
     // "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "@asimov/minimal-shared": ["../shared/src/index.ts"]
+      "@asimov/shared": ["../shared/src/index.ts"]
     },
     "types": ["node"]
   },

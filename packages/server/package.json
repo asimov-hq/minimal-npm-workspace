@@ -1,5 +1,5 @@
 {
-  "name": "@asimov/minimal-server",
+  "name": "@asimov/server",
   "private": true,
   "type": "module",
   "version": "0.0.0",
@@ -21,7 +21,7 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
-    "@asimov/minimal-shared": "^0.0.0",
+    "@asimov/shared": "^0.0.0",
     "@fastify/jwt": "^9.1.0",
     "@fastify/static": "^9.0.0",
     "@fastify/swagger": "^9.4.2",

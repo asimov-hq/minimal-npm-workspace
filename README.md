@@ -73,10 +73,10 @@ Explore it live at `/docs` (OpenAPI generated from the route schemas — never h
 `npm run dev:cli --`):
 
 ```
-npx my-app users                                    # list all users
-npx my-app todos alice --tag home                   # a user's todos, filtered by tag
-npx my-app todos alice --open                       # only unfinished (--done for finished)
-npx my-app remove-user bob                          # delete a user AND their todos
+npx asimov users                                    # list all users
+npx asimov todos alice --tag home                   # a user's todos, filtered by tag
+npx asimov todos alice --open                       # only unfinished (--done for finished)
+npx asimov remove-user bob                          # delete a user AND their todos
 ```
 
 `--data-dir <dir>` (or `DATA_DIR`) selects the data directory. The server keeps data in
@@ -114,7 +114,7 @@ config); the root `tsconfig.dev.json` is the watch graph. `shared` has no
 must emit *something* to participate in `tsc -b`; vite does the real bundling.
 
 The same dev/build split powers the CLI's import of the server's store:
-`@asimov/minimal-server/store` resolves to `../server/src/lib/store.ts` in dev (`paths`) and
+`@asimov/server/store` resolves to `../server/src/lib/store.ts` in dev (`paths`) and
 to `dist/lib/store.js` in builds (the server's `exports` map) — one persistence
 implementation, no duplication.
 

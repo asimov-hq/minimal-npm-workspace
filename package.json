@@ -1,5 +1,5 @@
 {
-  "name": "@asimov/minimal-workspace",
+  "name": "@asimov/workspace",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -10,15 +10,15 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsc -b && npm run --workspace @asimov/minimal-web build",
+    "build": "tsc -b && npm run --workspace @asimov/web build",
     "typecheck": "tsc -b",
     "clean": "npm run --workspaces --if-present clean",
     "dev:ts": "tsc -b -w tsconfig.dev.json",
-    "dev:app": "concurrently -k -s first -n server,web \"npm run --workspace @asimov/minimal-server dev\" \"npm run dev:web\"",
-    "dev:server": "npm run --workspace @asimov/minimal-server dev",
-    "dev:web": "npm run --workspace @asimov/minimal-web dev",
-    "dev:cli": "npm run --workspace @asimov/minimal-cli dev",
-    "start:server": "npm run --workspace @asimov/minimal-server start",
+    "dev:app": "concurrently -k -s first -n server,web \"npm run --workspace @asimov/server dev\" \"npm run dev:web\"",
+    "dev:server": "npm run --workspace @asimov/server dev",
+    "dev:web": "npm run --workspace @asimov/web dev",
+    "dev:cli": "npm run --workspace @asimov/cli dev",
+    "start:server": "npm run --workspace @asimov/server start",
     "lint": "eslint . --cache",
     "test": "npm run --workspaces --if-present test",
     "smoke:copy": "bash scripts/copy-smoke.sh",

@@ -9,7 +9,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "paths": {
-      "@asimov/minimal-shared": ["../shared/src"]
+      "@asimov/shared": ["../shared/src"]
     },
     "types": ["vite/client", "node"]
   },

@@ -8,7 +8,7 @@ import { Ajv } from "ajv";
 // ajv-formats is CJS-only; under NodeNext the callable plugin sits on .default
 import ajvFormats from "ajv-formats";
 const addFormats = ajvFormats.default;
-import type { Todo } from "@asimov/minimal-shared";
+import type { Todo } from "@asimov/shared";
 import { registerAuthRoutes, type UserRecord } from "./auth/routes.js";
 import type { AppConfig } from "./config.js";
 import { registerTodoRoutes } from "./todos/routes.js";
@@ -47,7 +47,7 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   await app.register(swagger, {
     openapi: {
       openapi: "3.1.0",
-      info: { title: "Minimal Todo API", version: "0.0.0" },
+      info: { title: "Asimov Todo API", version: "0.0.0" },
       components: {
         securitySchemes: {
           bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },

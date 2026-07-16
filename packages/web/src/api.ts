@@ -1,4 +1,4 @@
-import type { Todo, User } from "@asimov/minimal-shared";
+import type { Todo, User } from "@asimov/shared";
 
 // sessionStorage is per-tab, so each tab can hold its own logged-in user
 const TOKEN_KEY = "token";

@@ -1,10 +1,10 @@
 {
-  "name": "@asimov/minimal-cli",
+  "name": "@asimov/cli",
   "private": true,
   "type": "module",
   "version": "0.0.0",
   "bin": {
-    "my-app": "./bin/my-app.js"
+    "asimov": "./bin/asimov.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -14,7 +14,7 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
-    "@asimov/minimal-server": "^0.0.0",
-    "@asimov/minimal-shared": "^0.0.0"
+    "@asimov/server": "^0.0.0",
+    "@asimov/shared": "^0.0.0"
   }
 }

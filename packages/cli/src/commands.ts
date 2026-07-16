@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
-import type { Todo, User } from "@asimov/minimal-shared";
-import { createStore, type Store } from "@asimov/minimal-server/store";
+import type { Todo, User } from "@asimov/shared";
+import { createStore, type Store } from "@asimov/server/store";
 
 // users.json records carry a passwordHash the CLI never reads or prints
 type UserRecord = User & { passwordHash?: string };

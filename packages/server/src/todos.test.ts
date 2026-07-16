@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import type { FastifyInstance } from "fastify";
-import type { Todo } from "@asimov/minimal-shared";
+import type { Todo } from "@asimov/shared";
 import { createTestApp, type TestApp } from "./test-helpers.js";
 
 interface TodoBody {
