@@ -21,6 +21,7 @@ instead of inventing new ones.**
 | `packages/web/src/app.tsx` | the preact UI; `api.ts` is the fetch wrapper |
 | `packages/cli/src/` | CLI entry |
 | `docs/plans/` | plans (kaizen style); `docs/sessions/` session notes |
+| `docs/documentations/developer/` | developer docs — start with `data-models.md` |
 
 ## Required Verification Order
 
