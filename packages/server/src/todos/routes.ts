@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { normalizeTags, type Todo } from "@asimov/shared";
+import { matchesTodoFilter, normalizeTags, type Todo, type TodoFilter } from "@asimov/shared";
 import { Problem } from "../lib/problem.js";
 import type { Store } from "../lib/store.js";
 
 const todoSchema = {
   type: "object",
-  required: ["id", "ownerId", "title", "done", "tags", "createdAt"],
+  required: ["id", "ownerId", "title", "done", "tags", "createdAt", "updatedAt", "version"],
   properties: {
     id: { type: "string" },
     ownerId: { type: "string" },
@@ -14,6 +14,8 @@ const todoSchema = {
     done: { type: "boolean" },
     tags: { type: "array", items: { type: "string" } },
     createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+    version: { type: "integer", minimum: 1 },
   },
 } as const;
 
@@ -34,6 +36,7 @@ const tagsSchema = {
   type: "array",
   items: { type: "string", minLength: 1, maxLength: 30 },
 } as const;
+const versionSchema = { type: "integer", minimum: 1 } as const;
 
 const paramsSchema = {
   type: "object",
@@ -56,11 +59,30 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
     return todo;
   }
 
-  app.get("/v1/todos", {
-    preHandler: [app.authenticate],
+  function atSeenVersion(todo: Todo, seen: number): Todo {
+    if (todo.version !== seen) {
+      throw new Problem(
+        409,
+        "Conflict",
+        `todo changed since you loaded it (server version ${todo.version}, yours ${seen}) — reload and retry`,
+      );
+    }
+    return todo;
+  }
+
+  app.get<{ Querystring: TodoFilter }>("/v1/todos", {
+    onRequest: [app.authenticate],
     schema: {
       tags: ["todos"],
       security,
+      querystring: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          tag: { type: "string", minLength: 1 },
+          done: { type: "boolean" },
+        },
+      },
       response: {
         200: {
           type: "object",
@@ -78,13 +100,25 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
   }, (request) => {
     const mine = todos
       .values()
-      .filter((t) => t.ownerId === request.user.sub)
+      .filter((t) => t.ownerId === request.user.sub && matchesTodoFilter(t, request.query))
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     return { data: { todos: mine } };
   });
 
+  app.get<{ Params: TodoParams }>("/v1/todos/:id", {
+    onRequest: [app.authenticate],
+    schema: {
+      tags: ["todos"],
+      security,
+      params: paramsSchema,
+      response: { 200: todoResponseSchema },
+    },
+  }, (request) => {
+    return { data: { todo: ownTodo(request.params.id, request.user.sub) } };
+  });
+
   app.post<{ Body: { title: string; tags?: string[] } }>("/v1/todos", {
-    preHandler: [app.authenticate],
+    onRequest: [app.authenticate],
     schema: {
       tags: ["todos"],
       security,
@@ -97,23 +131,29 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
       response: { 201: todoResponseSchema },
     },
   }, async (request, reply) => {
+    const now = new Date().toISOString();
     const todo: Todo = {
       id: `todo_${randomUUID()}`,
       ownerId: request.user.sub,
       title: request.body.title,
       done: false,
       tags: normalizeTags(request.body.tags ?? []),
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
     };
     await todos.set(todo.id, todo);
     void reply.status(201);
     return { data: { todo } };
   });
 
-  app.patch<{ Body: { title?: string; done?: boolean; tags?: string[] }; Params: TodoParams }>(
+  app.patch<{
+    Body: { title?: string; done?: boolean; tags?: string[]; version: number };
+    Params: TodoParams;
+  }>(
     "/v1/todos/:id",
     {
-      preHandler: [app.authenticate],
+      onRequest: [app.authenticate],
       schema: {
         tags: ["todos"],
         security,
@@ -121,36 +161,56 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
         body: {
           type: "object",
           additionalProperties: false,
-          minProperties: 1,
-          properties: { title: titleSchema, done: { type: "boolean" }, tags: tagsSchema },
+          required: ["version"],
+          minProperties: 2,
+          properties: {
+            title: titleSchema,
+            done: { type: "boolean" },
+            tags: tagsSchema,
+            version: versionSchema,
+          },
         },
         response: { 200: todoResponseSchema },
       },
     },
     async (request) => {
-      const todo = ownTodo(request.params.id, request.user.sub);
+      const todo = atSeenVersion(
+        ownTodo(request.params.id, request.user.sub),
+        request.body.version,
+      );
       const { title, done, tags } = request.body;
       const updated: Todo = {
         ...todo,
         title: title ?? todo.title,
         done: done ?? todo.done,
         tags: tags !== undefined ? normalizeTags(tags) : todo.tags,
+        updatedAt: new Date().toISOString(),
+        version: todo.version + 1,
       };
       await todos.set(updated.id, updated);
       return { data: { todo: updated } };
     },
   );
 
-  app.delete<{ Params: TodoParams }>("/v1/todos/:id", {
-    preHandler: [app.authenticate],
+  app.delete<{ Params: TodoParams; Querystring: { version: number } }>("/v1/todos/:id", {
+    onRequest: [app.authenticate],
     schema: {
       tags: ["todos"],
       security,
       params: paramsSchema,
+      querystring: {
+        type: "object",
+        additionalProperties: false,
+        required: ["version"],
+        properties: { version: versionSchema },
+      },
       response: { 204: { type: "null" } },
     },
   }, async (request, reply) => {
-    const todo = ownTodo(request.params.id, request.user.sub);
+    const todo = atSeenVersion(
+      ownTodo(request.params.id, request.user.sub),
+      request.query.version,
+    );
     await todos.delete(todo.id);
     void reply.status(204);
   });

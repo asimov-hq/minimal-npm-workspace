@@ -28,6 +28,8 @@ async function seededStores(): Promise<{ stores: Stores; dataDir: string }> {
     done,
     tags,
     createdAt: `2026-07-15T12:00:0${id.slice(-1)}.000Z`,
+    updatedAt: `2026-07-15T12:00:0${id.slice(-1)}.000Z`,
+    version: 1,
   });
   await stores.todos.set("todo_1", todo("todo_1", "usr_a", "water plants", false, ["home"]));
   await stores.todos.set("todo_2", todo("todo_2", "usr_a", "file taxes", true, ["home", "money"]));

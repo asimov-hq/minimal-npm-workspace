@@ -131,6 +131,16 @@ try {
   await tabC.getByText("water plants").waitFor();
   ok("login shows existing todos", true);
 
+  // optimistic concurrency: tab A edits, tab C still holds the old version
+  await tabA.getByLabel("Done: water plants").uncheck();
+  await tabC.getByLabel("Done: water plants").click();
+  await tabC.getByText("changed in another tab").waitFor();
+  ok("stale write from another tab gets the conflict notice", true);
+  await tabC.getByText("water plants").waitFor();
+  await tabC.getByLabel("Done: water plants").check();
+  await tabC.locator("li.done .title").first().waitFor();
+  ok("retry after the conflict reload succeeds", true);
+
   // logout
   await tabC.getByRole("button", { name: "Log out" }).click();
   await tabC.getByLabel("Username").waitFor();

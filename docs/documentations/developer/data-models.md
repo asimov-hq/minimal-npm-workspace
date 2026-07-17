@@ -21,6 +21,8 @@ erDiagram
         boolean done "default false"
         string_array tags "each 1-30 chars, trimmed, deduped"
         string createdAt "ISO 8601"
+        string updatedAt "ISO 8601"
+        int version "optimistic concurrency, 409 on stale writes"
     }
 ```
 
@@ -55,14 +57,23 @@ erDiagram
 | `done` | `boolean` | defaults to `false` |
 | `tags` | `string[]` | each 1–30 chars; `normalizeTags` trims, drops empties, dedupes (first-seen order) on every write |
 | `createdAt` | `string` | ISO 8601; lists are sorted by it |
+| `updatedAt` | `string` | ISO 8601; equals `createdAt` until the first PATCH |
+| `version` | `number` | integer ≥ 1; optimistic concurrency (below) |
 
 - Type: `Todo` in `packages/shared/src/todos.ts`; stored as-is (no private fields).
 - **Owner scoping is absolute:** every handler resolves todos through the caller's
   `ownerId`; another user's todo answers `404` (not `403`), so ids don't leak across
   accounts.
+- **Optimistic concurrency:** PATCH (body) and DELETE (`?version=` query) must send the
+  version the caller last saw. Mismatch → `409 Conflict`, nothing written; the client
+  refetches and retries (the web shows "changed in another tab" and reloads). Every
+  successful write bumps `version` by 1 and refreshes `updatedAt`. Same pattern as batcave
+  and asimov-happy.
 - `TodoFilter` (`{ tag?, done? }`) + `matchesTodoFilter` define the one filter semantic used
-  by both the web's tag chips and the CLI's `--tag/--done/--open`.
-- Deleting a user via the CLI (`asimov remove-user`) cascades to all their todos.
+  by the web's tag chips, the CLI's `--tag/--done/--open`, and `GET /v1/todos?tag=&done=`
+  (the query schema is where ajv's type coercion for query strings is demonstrated).
+- Deleting a user via the CLI (`asimov remove-user`) cascades to all their todos (admin
+  path — bypasses version checks by design).
 
 ## JWT payload
 

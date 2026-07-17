@@ -119,7 +119,7 @@ export function registerAuthRoutes(app: FastifyInstance, users: Store<UserRecord
   });
 
   app.get("/v1/me", {
-    preHandler: [app.authenticate],
+    onRequest: [app.authenticate],
     schema: {
       tags: ["auth"],
       security: [{ bearerAuth: [] }],

@@ -5,6 +5,9 @@ export interface Todo {
   done: boolean;
   tags: string[];
   createdAt: string;
+  updatedAt: string;
+  /** optimistic concurrency: writes must send the version they saw; stale -> 409 */
+  version: number;
 }
 
 export interface TodoFilter {

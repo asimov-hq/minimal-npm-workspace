@@ -50,6 +50,9 @@ npm run start:server   # fastify serves the built web app AND the API on :3001
 - **Log in:** username + password. Unknown user and wrong password get the same 401.
 - **Per-tab sessions:** the JWT lives in `sessionStorage`, so two tabs can be two users.
 - **Todos:** add with comma-separated tags, toggle, delete; click a tag chip to filter.
+- **Conflict-safe edits (optimistic concurrency):** every todo has an integer `version`;
+  writes send the version they saw and get a 409 if someone else changed it first — try
+  editing the same todo from two tabs. The UI reloads the list and asks you to retry.
 
 ## API
 
@@ -61,10 +64,11 @@ Explore it live at `/docs` (OpenAPI generated from the route schemas — never h
 | `POST /v1/auth/signup` | – | `{username, password, email?}` → 201, 409 if taken |
 | `POST /v1/auth/login` | – | `{username, password}` → 200 |
 | `GET /v1/me` | Bearer | → the authenticated user |
-| `GET /v1/todos` | Bearer | → your todos |
-| `POST /v1/todos` | Bearer | `{title, tags?}` → 201 |
-| `PATCH /v1/todos/:id` | Bearer | `{title?, done?, tags?}` |
-| `DELETE /v1/todos/:id` | Bearer | → 204 |
+| `GET /v1/todos` | Bearer | → your todos; `?tag=…&done=…` filters |
+| `GET /v1/todos/:id` | Bearer | → one todo (404 if not yours) |
+| `POST /v1/todos` | Bearer | `{title, tags?}` → 201 (`version: 1`) |
+| `PATCH /v1/todos/:id` | Bearer | `{title?, done?, tags?, version}` → 200; **409 if stale** |
+| `DELETE /v1/todos/:id?version=…` | Bearer | → 204; **409 if stale** |
 | `GET /healthz` | – | liveness |
 
 ## Admin CLI

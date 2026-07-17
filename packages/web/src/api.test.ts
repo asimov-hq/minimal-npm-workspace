@@ -94,8 +94,9 @@ test("ApiError falls back to title, then statusText", async () => {
   });
 });
 
-test("204 responses resolve without reading a body", async () => {
+test("204 responses resolve without reading a body; version travels as a query param", async () => {
   api.setToken("tok-1");
-  stubFetch(204, undefined);
-  assert.equal(await api.deleteTodo("todo_1"), undefined);
+  const calls = stubFetch(204, undefined);
+  assert.equal(await api.deleteTodo("todo_1", 3), undefined);
+  assert.equal(calls[0]?.url, "/v1/todos/todo_1?version=3");
 });

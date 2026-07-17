@@ -164,19 +164,27 @@ function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
   const [filter, setFilter] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  async function refresh() {
+    const { todos: list } = await api.listTodos();
+    setTodos(list);
+  }
+
   function handle(err: unknown) {
     if (err instanceof api.ApiError && err.status === 401) {
       onLogout();
+      return;
+    }
+    if (err instanceof api.ApiError && err.status === 409) {
+      // optimistic concurrency: someone else (another tab?) changed it first
+      setError("This todo changed in another tab — list reloaded, please retry.");
+      refresh().catch(() => undefined);
       return;
     }
     setError(err instanceof Error ? err.message : String(err));
   }
 
   useEffect(() => {
-    api
-      .listTodos()
-      .then(({ todos: list }) => setTodos(list))
-      .catch(handle);
+    refresh().catch(handle);
   }, []);
 
   async function add(event: Event) {
@@ -199,7 +207,10 @@ function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
 
   async function toggle(todo: Todo) {
     try {
-      const { todo: updated } = await api.updateTodo(todo.id, { done: !todo.done });
+      const { todo: updated } = await api.updateTodo(todo.id, {
+        done: !todo.done,
+        version: todo.version,
+      });
       setTodos((current) => current.map((t) => (t.id === updated.id ? updated : t)));
     } catch (err) {
       handle(err);
@@ -208,7 +219,7 @@ function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
 
   async function remove(todo: Todo) {
     try {
-      await api.deleteTodo(todo.id);
+      await api.deleteTodo(todo.id, todo.version);
       setTodos((current) => current.filter((t) => t.id !== todo.id));
     } catch (err) {
       handle(err);

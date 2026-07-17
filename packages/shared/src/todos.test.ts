@@ -19,6 +19,8 @@ const todo: Todo = {
   done: true,
   tags: ["home", "urgent"],
   createdAt: "2026-07-16T00:00:00.000Z",
+  updatedAt: "2026-07-16T00:00:00.000Z",
+  version: 1,
 };
 
 test("matchesTodoFilter combines tag and done criteria", () => {

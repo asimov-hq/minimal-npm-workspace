@@ -69,11 +69,11 @@ export function createTodo(body: { title: string; tags?: string[] }): Promise<{ 
 
 export function updateTodo(
   id: string,
-  body: { title?: string; done?: boolean; tags?: string[] },
+  body: { title?: string; done?: boolean; tags?: string[]; version: number },
 ): Promise<{ todo: Todo }> {
   return call("PATCH", `/v1/todos/${id}`, body);
 }
 
-export function deleteTodo(id: string): Promise<void> {
-  return call("DELETE", `/v1/todos/${id}`);
+export function deleteTodo(id: string, version: number): Promise<void> {
+  return call("DELETE", `/v1/todos/${id}?version=${version}`);
 }
