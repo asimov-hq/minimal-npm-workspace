@@ -42,6 +42,8 @@ export default tseslint.config(
         setTimeout: "readonly",
         clearTimeout: "readonly",
         URL: "readonly",
+        // page.evaluate() callbacks run in the browser
+        document: "readonly",
       },
     },
   }

@@ -141,6 +141,15 @@ try {
   await tabC.locator("li.done .title").first().waitFor();
   ok("retry after the conflict reload succeeds", true);
 
+  // themes: dark by default, switchable, persisted per tab's origin storage
+  const activeTheme = () => tabA.evaluate(() => document.documentElement.dataset.theme);
+  ok("default theme is dark", (await activeTheme()) === "dark");
+  await tabA.getByLabel("Theme").selectOption("northern-lights");
+  ok("theme switch applies", (await activeTheme()) === "northern-lights");
+  await tabA.reload();
+  await tabA.getByText("water plants").waitFor();
+  ok("theme persists across reload", (await activeTheme()) === "northern-lights");
+
   // logout
   await tabC.getByRole("button", { name: "Log out" }).click();
   await tabC.getByLabel("Username").waitFor();

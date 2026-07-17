@@ -57,6 +57,11 @@ Rules:
   through `createStore` (in-memory Map, atomic tmp+rename writes). The server loads data at
   startup and won't see external file edits until restarted.
 - **Secrets**: `JWT_SECRET` has a dev default; anything deployed must set its own.
+- **Styling**: semantic theme tokens at the top of `packages/web/src/styles.css` are the
+  only place colors may be written; every rule uses `var(--…)` (a guard test in
+  `styles.test.ts` fails on color literals past the marker). New UI consumes existing
+  tokens; a new theme implements the full token contract under `[data-theme="…"]` and gets
+  an entry in `theme.ts`.
 
 ## Kaizen Programming Approach
 

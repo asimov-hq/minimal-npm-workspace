@@ -50,6 +50,10 @@ npm run start:server   # fastify serves the built web app AND the API on :3001
 - **Log in:** username + password. Unknown user and wrong password get the same 401.
 - **Per-tab sessions:** the JWT lives in `sessionStorage`, so two tabs can be two users.
 - **Todos:** add with comma-separated tags, toggle, delete; click a tag chip to filter.
+- **Themes:** dark (default), light, ocean, forest, volcano, violet northern lights —
+  picker top right, persisted in `localStorage`. All styling flows through semantic CSS
+  custom properties (`--surface`, `--accent`, …); a unit test fails if a color literal
+  appears outside the token blocks, so the CSS stays theme-clean by construction.
 - **Conflict-safe edits (optimistic concurrency):** every todo has an integer `version`;
   writes send the version they saw and get a 409 if someone else changed it first — try
   editing the same todo from two tabs. The UI reloads the list and asks you to retry.

@@ -9,6 +9,7 @@ import {
   type User,
 } from "@asimov/shared";
 import * as api from "./api";
+import { applyTheme, currentTheme, THEMES, type Theme } from "./theme";
 
 export function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -34,12 +35,37 @@ export function App() {
   if (!ready) return null;
   return (
     <main class="app">
+      <div class="topbar">
+        <ThemePicker />
+      </div>
       {user === null ? (
         <AuthScreen onAuthed={setUser} />
       ) : (
         <TodoScreen user={user} onLogout={logout} />
       )}
     </main>
+  );
+}
+
+function ThemePicker() {
+  const [theme, setTheme] = useState<Theme>(currentTheme());
+  return (
+    <select
+      class="theme-picker"
+      aria-label="Theme"
+      value={theme}
+      onChange={(e) => {
+        const next = e.currentTarget.value as Theme;
+        applyTheme(next);
+        setTheme(next);
+      }}
+    >
+      {THEMES.map((t) => (
+        <option key={t.id} value={t.id}>
+          {t.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
