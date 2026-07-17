@@ -17,23 +17,25 @@ npm install
 npm run dev:app
 ```
 
-Open http://localhost:8888 — vite serves the preact app and proxies `/v1` to the fastify server
-on port 3001. API docs live at http://localhost:3001/docs. If 3001 is taken on your machine,
-`API_PORT=3111 npm run dev:app` moves the server and the proxy together (`PORT` still wins
-server-side).
+Open http://localhost:8989 — vite serves the preact app and proxies `/v1` to the fastify server
+on port 3939. API docs live at http://localhost:3939/docs. `dev:app` picks the API port before
+starting anything: it prefers 3939 (override with `API_PORT`), and if that's taken it falls
+back to a free port and points the proxy there automatically — no crash, no collision with
+sibling projects. Watch the `[dev]` line for the chosen port. Vite likewise auto-bumps its own
+UI port if 8989 is busy.
 
 Production-style, one process:
 
 ```
 npm run build
-npm run start:server   # fastify serves the built web app AND the API on :3001
+npm run start:server   # fastify serves the built web app AND the API on :3939
 ```
 
 ## Commands
 
 | command | what it does |
 |---|---|
-| `npm run dev:app` | server + web with hot reload (concurrently) |
+| `npm run dev:app` | server + web with hot reload (`scripts/dev.mjs`; auto-picks a free API port) |
 | `npm run dev:server` / `dev:web` / `dev:cli` | one package in dev mode |
 | `npm run build` | compile all packages + bundle the web app |
 | `npm test` | unit/integration tests (node:test via tsx, `app.inject()` + one real-socket smoke test) |
@@ -104,8 +106,8 @@ memory — stop it before `remove-user`, or restart it afterwards.
   resolver, so they always agree. Data is untracked by design; `git add -f data/todos.json`
   if you ever want a snapshot in history (never commit real accounts — `users.json` holds
   password hashes)
-- config via env: `PORT` (3001), `HOST` (127.0.0.1), `JWT_SECRET` (**dev default — set your
-  own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (see above)
+- config via env: `PORT` / `API_PORT` (3939), `HOST` (127.0.0.1), `JWT_SECRET` (**dev
+  default — set your own in anything real**), `TOKEN_TTL` (`7d`), `DATA_DIR` (see above)
 - demo-scope auth, on purpose: logout is client-side only (a token stays valid until
   `TOKEN_TTL` runs out — there is no revocation list) and login has no rate limiting.
   Anything real needs both.
@@ -153,7 +155,9 @@ implementation, no duplication.
 `copy.sh` copies every git-tracked file (via `git ls-files`) except the template-local
 `docs/`, `README.md`, and `LICENSE` — so the copy always matches the repo, build artifacts
 never sneak in, and `AGENTS.md` + all configs come along. `npm run smoke:copy` proves the
-copy passes all gates on its own (CI runs it too).
+copy passes all gates on its own (CI runs it too). After copying, follow the
+**After copying the template** checklist in [`AGENTS.md`](AGENTS.md) (rename the scope, adapt
+ports, set a real `JWT_SECRET`, …).
 
 ```shellsession
 me@alpaca minimal-npm-workspace % ./scripts/copy.sh ../my-awesome-new-project

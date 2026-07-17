@@ -8,6 +8,28 @@ coding agents start real work without long prompts: the patterns for routing, va
 auth, persistence, testing, and UI are already in place. **Extend the existing patterns
 instead of inventing new ones.**
 
+## After copying the template (checklist)
+
+`scripts/copy.sh` produced this tree from the scaffold. Before building on it, work through
+this list — most of it is a scoped find-and-replace the gates will police:
+
+1. **`npm install`** — link the workspaces and generate a fresh `package-lock.json`.
+2. **Rename the `@asimov` scope** to your project's, everywhere it appears (package `name`
+   fields, imports, tsconfig `paths` keys, the vite alias, the server `exports` subpaths).
+   It's the only identity token — role names (`server`/`web`/`cli`/`shared`) stay. `npm run
+   typecheck && npm run lint` fails loudly until every reference agrees.
+3. **Adapt the ports** so this project doesn't collide with your other running projects:
+   backend default `3939` in `packages/server/src/config.ts`, the dev launcher
+   `scripts/dev.mjs`, and the vite proxy fallback in `packages/web/vite.config.ts`; frontend
+   default `8989` in `vite.config.ts`. (`npm run dev:app` already falls back to a free port if
+   the backend one is taken, but pick distinct defaults per project anyway.) ;)
+4. **Set a real `JWT_SECRET`** (env or your deploy config) — never ship the dev default.
+5. **Rename the CLI bin** (`asimov` in `packages/cli/package.json` + `bin/`) and the **OpenAPI
+   title** (`packages/server/src/app.ts`) if you want them branded.
+6. **Write your own `README.md` and `LICENSE`** — `copy.sh` omits both by design.
+7. **`git init` + first commit**, then verify the copy is sound:
+   `npm run lint && npm run typecheck && npm run build && npm test`.
+
 ## Repo Map
 
 | Where | What |

@@ -16,11 +16,11 @@ export default defineConfig({
   server: {
     proxy: {
       // API_PORT moves the server and this proxy together (see README)
-      "/v1": `http://localhost:${process.env.API_PORT ?? "3001"}`
+      "/v1": `http://localhost:${process.env.API_PORT ?? "3939"}`
     },
     fs: {
       allow: [resolve(__dirname, "..")]
     },
-    port: 8888
+    port: 8989
   }
 });
