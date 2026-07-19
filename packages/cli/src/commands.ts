@@ -34,6 +34,8 @@ function toPublicUser(record: UserRecord): User {
     id: record.id,
     username: record.username,
     createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    version: record.version,
   };
   if (record.email !== undefined) user.email = record.email;
   return user;

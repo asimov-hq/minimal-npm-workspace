@@ -56,6 +56,8 @@ Legend: paths are repo-relative; `@asimov/*` are the workspace packages.
 | Feature | What it shows | Where |
 |---|---|---|
 | username/password signup + login | live account, no email verification | `auth/routes.ts` |
+| symmetric self CRUD | `/v1/me` read + update (email/password) + delete (cascades todos), version-guarded | `auth/routes.ts` (`PATCH`/`DELETE /v1/me`) |
+| shared concurrency guard | one `assertVersion` → 409, used by both users and todos | `packages/server/src/lib/versioning.ts` |
 | no user enumeration | unknown user and wrong password return an identical 401 | `auth/routes.ts` (dummy-hash compare) |
 | per-tab sessions | JWT in `sessionStorage` → two tabs = two users | `packages/web/src/api.ts` |
 | shared validators | one rule set for username/password, used by server schema **and** web | `packages/shared/src/users.ts` |
@@ -121,7 +123,8 @@ absent — each has a clean place to grow when a real app needs it:
 |---|---|---|
 | token revocation / refresh tokens | logout is client-side; demo scope | new store + `/v1/auth/refresh`, check in `authenticate` |
 | login rate limiting | demo scope | a fastify plugin / hook before `auth/routes.ts` |
-| email verification / password reset | "pick a username and go" | `auth/routes.ts` + a mail seam |
+| email verification / forgot-password reset | "pick a username and go" (in-session profile edit exists; the *unauthenticated* reset flow does not) | `auth/routes.ts` + a mail seam |
+| username change | it's the login handle + JWT subject; needs uniqueness recheck + token reissue | `PATCH /v1/me` + re-sign the JWT |
 | pagination on list endpoints | ten-item demo lists | `GET /v1/todos` query schema + response `{items,total,limit,offset}` |
 | one-file-per-record storage | one-file-per-collection is right at this scale | swap the write strategy in `lib/store.ts` |
 | richer todo model (status enum, priority, description) | app flavor, not a new pattern | `shared/src/todos.ts` + route schemas |

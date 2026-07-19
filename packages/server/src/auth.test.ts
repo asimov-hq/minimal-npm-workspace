@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
+import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import type { FastifyInstance } from "fastify";
 import type { User } from "@asimov/shared";
@@ -176,6 +177,111 @@ test("expired tokens are rejected with 401 problem+json", async () => {
   } finally {
     await shortLived.close();
     await rm(dataDir, { recursive: true, force: true });
+  }
+});
+
+function authed(token: string) {
+  return { authorization: `Bearer ${token}` };
+}
+
+test("new accounts start at version 1 with updatedAt === createdAt", async () => {
+  const { app, close } = await createTestApp();
+  try {
+    const { user } = (await signup(app, { username: "alice", password: "hunter2hunter2" })).json<AuthBody>().data;
+    assert.equal(user.version, 1);
+    assert.equal(user.updatedAt, user.createdAt);
+  } finally {
+    await close();
+  }
+});
+
+test("PATCH /v1/me updates email, bumps version, never leaks the hash", async () => {
+  const { app, close } = await createTestApp();
+  try {
+    const { user, token } = (await signup(app, { username: "alice", password: "hunter2hunter2" })).json<AuthBody>().data;
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/v1/me",
+      headers: authed(token),
+      payload: { email: "alice@example.com", version: user.version },
+    });
+    assert.equal(res.statusCode, 200);
+    const updated = res.json<{ data: { user: User } }>().data.user;
+    assert.equal(updated.email, "alice@example.com");
+    assert.equal(updated.version, 2);
+    assert.ok(updated.updatedAt >= updated.createdAt);
+    assert.ok(!res.body.includes("assword"), "no password material in response");
+  } finally {
+    await close();
+  }
+});
+
+test("PATCH /v1/me can change the password (old fails, new works)", async () => {
+  const { app, close } = await createTestApp();
+  try {
+    const { token } = (await signup(app, { username: "alice", password: "hunter2hunter2" })).json<AuthBody>().data;
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/v1/me",
+      headers: authed(token),
+      payload: { password: "brand-new-pass", version: 1 },
+    });
+    assert.equal(res.statusCode, 200);
+    assert.equal((await login(app, { username: "alice", password: "hunter2hunter2" })).statusCode, 401);
+    assert.equal((await login(app, { username: "alice", password: "brand-new-pass" })).statusCode, 200);
+  } finally {
+    await close();
+  }
+});
+
+test("PATCH /v1/me is version-guarded and rejects an empty patch", async () => {
+  const { app, close } = await createTestApp();
+  try {
+    const { token } = (await signup(app, { username: "alice", password: "hunter2hunter2" })).json<AuthBody>().data;
+    const stale = await app.inject({
+      method: "PATCH",
+      url: "/v1/me",
+      headers: authed(token),
+      payload: { email: "a@example.com", version: 99 },
+    });
+    assert.equal(stale.statusCode, 409);
+    assert.match(stale.headers["content-type"] ?? "", /^application\/problem\+json/);
+    const noVersion = await app.inject({
+      method: "PATCH",
+      url: "/v1/me",
+      headers: authed(token),
+      payload: { email: "a@example.com" },
+    });
+    assert.equal(noVersion.statusCode, 400);
+    const empty = await app.inject({
+      method: "PATCH",
+      url: "/v1/me",
+      headers: authed(token),
+      payload: { version: 1 },
+    });
+    assert.equal(empty.statusCode, 400);
+  } finally {
+    await close();
+  }
+});
+
+test("DELETE /v1/me removes the account and cascades its todos", async () => {
+  const { app, dataDir, close } = await createTestApp();
+  try {
+    const { token } = (await signup(app, { username: "alice", password: "hunter2hunter2" })).json<AuthBody>().data;
+    await app.inject({ method: "POST", url: "/v1/todos", headers: authed(token), payload: { title: "x" } });
+    const stale = await app.inject({ method: "DELETE", url: "/v1/me?version=99", headers: authed(token) });
+    assert.equal(stale.statusCode, 409);
+    const res = await app.inject({ method: "DELETE", url: "/v1/me?version=1", headers: authed(token) });
+    assert.equal(res.statusCode, 204);
+    // account gone: login fails, and the token's user no longer resolves
+    assert.equal((await login(app, { username: "alice", password: "hunter2hunter2" })).statusCode, 401);
+    assert.equal((await app.inject({ method: "GET", url: "/v1/me", headers: authed(token) })).statusCode, 401);
+    // the todo is actually gone from disk, not merely orphaned
+    const onDisk = JSON.parse(await readFile(join(dataDir, "todos.json"), "utf8")) as Record<string, unknown>;
+    assert.equal(Object.keys(onDisk).length, 0);
+  } finally {
+    await close();
   }
 });
 

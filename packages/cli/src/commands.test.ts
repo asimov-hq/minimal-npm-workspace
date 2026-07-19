@@ -13,12 +13,16 @@ async function seededStores(): Promise<{ stores: Stores; dataDir: string }> {
     username: "alice",
     email: "alice@example.com",
     createdAt: "2026-07-15T10:00:00.000Z",
+    updatedAt: "2026-07-15T10:00:00.000Z",
+    version: 1,
     passwordHash: "scrypt:aa:bb",
   });
   await stores.users.set("usr_b", {
     id: "usr_b",
     username: "bob",
     createdAt: "2026-07-15T11:00:00.000Z",
+    updatedAt: "2026-07-15T11:00:00.000Z",
+    version: 1,
     passwordHash: "scrypt:cc:dd",
   });
   const todo = (id: string, ownerId: string, title: string, done: boolean, tags: string[]) => ({

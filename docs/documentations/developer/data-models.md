@@ -12,6 +12,8 @@ erDiagram
         string username UK "unique, ^[a-z0-9_-]{3,20}$"
         string email "optional, format: email"
         string createdAt "ISO 8601"
+        string updatedAt "ISO 8601"
+        int version "optimistic concurrency on profile edits"
         string passwordHash "server-only, never serialized"
     }
     TODO {
@@ -34,6 +36,8 @@ erDiagram
 | `username` | `string` | unique (case-sensitive), `USERNAME_PATTERN` = `^[a-z0-9_-]{3,20}$` |
 | `email` | `string?` | optional, ajv `format: "email"`; never verified |
 | `createdAt` | `string` | ISO 8601, set at signup |
+| `updatedAt` | `string` | ISO 8601; equals `createdAt` until the first profile edit |
+| `version` | `number` | integer ≥ 1; optimistic concurrency on profile edits (below) |
 
 - **Public type:** `User` in `packages/shared/src/users.ts` — what the API returns and the
   web/CLI consume.
@@ -46,6 +50,11 @@ erDiagram
   ajv route schemas enforce the same rules at the trust boundary.
 - Uniqueness of `username` is checked at signup (409 on conflict) by scanning the store —
   O(n), fine at demo scale.
+- **Symmetric self CRUD** on `/v1/me`: read (`GET`), update (`PATCH` — email and/or
+  password, version-guarded), delete (`DELETE ?version=` — cascades the user's todos);
+  create is `signup`. `PATCH`/`DELETE` use the same `assertVersion` guard as todos
+  (`lib/versioning.ts`) → 409 on a stale `version`. `username` stays immutable (it's the
+  login handle and JWT subject); changing it is a seam.
 
 ## Todo
 

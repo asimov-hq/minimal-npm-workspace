@@ -70,9 +70,8 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   });
 
   const users = await createStore<UserRecord>(config.dataDir, "users");
-  registerAuthRoutes(app, users);
-
   const todos = await createStore<Todo>(config.dataDir, "todos");
+  registerAuthRoutes(app, users, todos);
   registerTodoRoutes(app, todos);
 
   app.get("/healthz", {

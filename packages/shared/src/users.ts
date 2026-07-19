@@ -3,6 +3,9 @@ export interface User {
   username: string;
   email?: string;
   createdAt: string;
+  updatedAt: string;
+  /** optimistic concurrency: profile writes must send the version they saw; stale -> 409 */
+  version: number;
 }
 
 export const USERNAME_PATTERN = "^[a-z0-9_-]{3,20}$";

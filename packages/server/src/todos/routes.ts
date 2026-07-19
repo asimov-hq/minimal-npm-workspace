@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { matchesTodoFilter, normalizeTags, type Todo, type TodoFilter } from "@asimov/shared";
 import { Problem } from "../lib/problem.js";
 import type { Store } from "../lib/store.js";
+import { assertVersion } from "../lib/versioning.js";
 
 const todoSchema = {
   type: "object",
@@ -55,17 +56,6 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
     const todo = todos.get(id);
     if (!todo || todo.ownerId !== ownerId) {
       throw new Problem(404, "Not Found", `no todo "${id}"`);
-    }
-    return todo;
-  }
-
-  function atSeenVersion(todo: Todo, seen: number): Todo {
-    if (todo.version !== seen) {
-      throw new Problem(
-        409,
-        "Conflict",
-        `todo changed since you loaded it (server version ${todo.version}, yours ${seen}) — reload and retry`,
-      );
     }
     return todo;
   }
@@ -174,9 +164,10 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
       },
     },
     async (request) => {
-      const todo = atSeenVersion(
+      const todo = assertVersion(
         ownTodo(request.params.id, request.user.sub),
         request.body.version,
+        "todo",
       );
       const { title, done, tags } = request.body;
       const updated: Todo = {
@@ -207,9 +198,10 @@ export function registerTodoRoutes(app: FastifyInstance, todos: Store<Todo>): vo
       response: { 204: { type: "null" } },
     },
   }, async (request, reply) => {
-    const todo = atSeenVersion(
+    const todo = assertVersion(
       ownTodo(request.params.id, request.user.sub),
       request.query.version,
+      "todo",
     );
     await todos.delete(todo.id);
     void reply.status(204);
