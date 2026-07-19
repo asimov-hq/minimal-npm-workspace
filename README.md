@@ -25,6 +25,11 @@ back to a free port and points the proxy there automatically — no crash, no co
 sibling projects. Watch the `[dev]` line for the chosen port. Vite likewise auto-bumps its own
 UI port if 8989 is busy.
 
+**Dev container:** `.devcontainer/` gives a reproducible env (Node 22) with the **Codex** and
+**Claude Code** CLIs preinstalled — VS Code "Reopen in Container" or `devcontainer up`. Set
+`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` on the host to authenticate them (forwarded in, never
+committed).
+
 Production-style, one process:
 
 ```

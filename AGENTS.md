@@ -29,6 +29,10 @@ this list — most of it is a scoped find-and-replace the gates will police:
 6. **Write your own `README.md` and `LICENSE`** — `copy.sh` omits both by design.
 7. **`git init` + first commit**, then verify the copy is sound:
    `npm run lint && npm run typecheck && npm run build && npm test`.
+8. The `.devcontainer/` (Node 22 + Codex/Claude CLIs) is inherited — rebuild it after the
+   rename/port changes so the container matches. The CLIs are installed but not
+   authenticated; set `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` on the host (forwarded via
+   `remoteEnv`) or log in inside the container.
 
 ## Repo Map
 

@@ -106,6 +106,7 @@ Full model reference: [`docs/documentations/developer/data-models.md`](docs/docu
 
 | Feature | What it shows | Where |
 |---|---|---|
+| devcontainer | Node 22 + Codex (`@openai/codex`) and Claude Code (`@anthropic-ai/claude-code`) CLIs preinstalled | `.devcontainer/` |
 | smart dev launcher | picks a free API port (prefers 3939), points the proxy at it, clean tree teardown | `scripts/dev.mjs` (`npm run dev:app`) |
 | deterministic copy | `git ls-files` as the source of truth; artifacts never leak | `scripts/copy.sh` |
 | post-copy checklist | rename scope, adapt ports, set secret, … | `AGENTS.md` |
