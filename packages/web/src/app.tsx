@@ -11,9 +11,14 @@ import {
 import * as api from "./api";
 import { applyTheme, currentTheme, THEMES, type Theme } from "./theme";
 
+type View = "main" | "settings";
+type AuthMode = "login" | "signup";
+
 export function App() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const [view, setView] = useState<View>("main");
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
 
   useEffect(() => {
     if (api.getToken() === null) {
@@ -30,47 +35,108 @@ export function App() {
   function logout() {
     api.setToken(null);
     setUser(null);
+    setView("main");
+  }
+
+  function onAuthed(u: User) {
+    setUser(u);
+    setView("main");
+  }
+
+  function startAuth(mode: AuthMode) {
+    setAuthMode(mode);
+    setView("main");
   }
 
   if (!ready) return null;
   return (
     <main class="app">
-      <div class="topbar">
-        <ThemePicker />
-      </div>
-      {user === null ? (
-        <AuthScreen onAuthed={setUser} />
+      <MenuBar
+        user={user}
+        view={view}
+        onNav={setView}
+        onLogout={logout}
+        onStartAuth={startAuth}
+      />
+      {view === "settings" ? (
+        <SettingsScreen user={user} onUpdated={setUser} onDeleted={logout} />
+      ) : user === null ? (
+        <AuthScreen mode={authMode} onAuthed={onAuthed} />
       ) : (
-        <TodoScreen user={user} onLogout={logout} />
+        <TodoScreen onLogout={logout} />
       )}
     </main>
   );
 }
 
-function ThemePicker() {
-  const [theme, setTheme] = useState<Theme>(currentTheme());
+function MenuBar({
+  user,
+  view,
+  onNav,
+  onLogout,
+  onStartAuth,
+}: {
+  user: User | null;
+  view: View;
+  onNav: (v: View) => void;
+  onLogout: () => void;
+  onStartAuth: (mode: AuthMode) => void;
+}) {
   return (
-    <select
-      class="theme-picker"
-      aria-label="Theme"
-      value={theme}
-      onChange={(e) => {
-        const next = e.currentTarget.value as Theme;
-        applyTheme(next);
-        setTheme(next);
-      }}
-    >
-      {THEMES.map((t) => (
-        <option key={t.id} value={t.id}>
-          {t.label}
-        </option>
-      ))}
-    </select>
+    <nav class="menubar">
+      <span class="brand">todos</span>
+      <div class="menu-items">
+        {user !== null ? (
+          <>
+            <button
+              type="button"
+              class={view === "main" ? "active" : ""}
+              onClick={() => onNav("main")}
+            >
+              Todos
+            </button>
+            <button
+              type="button"
+              class={view === "settings" ? "active" : ""}
+              onClick={() => onNav("settings")}
+            >
+              <span aria-hidden="true">⚙</span> Settings
+            </button>
+            <span class="who">{user.username}</span>
+            <button type="button" onClick={onLogout}>
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={() => onStartAuth("login")}>
+              Log in
+            </button>
+            <button type="button" onClick={() => onStartAuth("signup")}>
+              Sign up
+            </button>
+            <button
+              type="button"
+              class={view === "settings" ? "active" : ""}
+              onClick={() => onNav("settings")}
+              aria-label="Settings"
+            >
+              <span aria-hidden="true">⚙</span>
+            </button>
+          </>
+        )}
+      </div>
+    </nav>
   );
 }
 
-function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+function AuthScreen({
+  mode,
+  onAuthed,
+}: {
+  mode: AuthMode;
+  onAuthed: (user: User) => void;
+}) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,6 +145,12 @@ function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
   const [busy, setBusy] = useState(false);
 
   const signup = mode === "signup";
+  // mode is driven by the menu bar; clear transient form state when it flips
+  useEffect(() => {
+    setError(null);
+    setConfirm("");
+  }, [mode]);
+
   const mismatch = signup && confirm !== "" && password !== confirm;
   const incomplete = username === "" || password === "" || (signup && confirm === "");
   // the same shared rules the server enforces, checked before the round-trip
@@ -104,31 +176,9 @@ function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
     }
   }
 
-  function switchMode(next: "login" | "signup") {
-    setMode(next);
-    setError(null);
-    setConfirm("");
-  }
-
   return (
     <section class="card auth">
-      <h1>todos</h1>
-      <div class="tabs" role="tablist">
-        <button
-          type="button"
-          class={mode === "login" ? "active" : ""}
-          onClick={() => switchMode("login")}
-        >
-          Log in
-        </button>
-        <button
-          type="button"
-          class={mode === "signup" ? "active" : ""}
-          onClick={() => switchMode("signup")}
-        >
-          Sign up
-        </button>
-      </div>
+      <h1>{signup ? "sign up" : "log in"}</h1>
       <form onSubmit={(e) => void submit(e)}>
         <label>
           Username
@@ -183,7 +233,196 @@ function AuthScreen({ onAuthed }: { onAuthed: (user: User) => void }) {
   );
 }
 
-function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
+function SettingsScreen({
+  user,
+  onUpdated,
+  onDeleted,
+}: {
+  user: User | null;
+  onUpdated: (user: User) => void;
+  onDeleted: () => void;
+}) {
+  return (
+    <section class="card settings">
+      <h1>settings</h1>
+      <div class="section">
+        <h2>Appearance</h2>
+        <label>
+          Theme
+          <ThemePicker />
+        </label>
+      </div>
+      {user !== null && (
+        <EditProfile user={user} onUpdated={onUpdated} onDeleted={onDeleted} />
+      )}
+    </section>
+  );
+}
+
+function ThemePicker() {
+  const [theme, setTheme] = useState<Theme>(currentTheme());
+  return (
+    <select
+      class="theme-picker"
+      aria-label="Theme"
+      value={theme}
+      onChange={(e) => {
+        const next = e.currentTarget.value as Theme;
+        applyTheme(next);
+        setTheme(next);
+      }}
+    >
+      {THEMES.map((t) => (
+        <option key={t.id} value={t.id}>
+          {t.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function EditProfile({
+  user,
+  onUpdated,
+  onDeleted,
+}: {
+  user: User;
+  onUpdated: (user: User) => void;
+  onDeleted: () => void;
+}) {
+  const [email, setEmail] = useState(user.email ?? "");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const emailChanged = email !== (user.email ?? "");
+  const mismatch = password !== "" && confirm !== password;
+  const passwordError = password !== "" ? validatePassword(password) : null;
+  const nothingToSave = !emailChanged && password === "";
+  const blocked = busy || mismatch || passwordError !== null || nothingToSave;
+
+  function fail(err: unknown) {
+    if (err instanceof api.ApiError && err.status === 401) return onDeleted();
+    if (err instanceof api.ApiError && err.status === 409) {
+      setError("Profile changed elsewhere — reloading, please retry.");
+      api.me().then(({ user: u }) => onUpdated(u)).catch(() => undefined);
+      return;
+    }
+    setError(err instanceof Error ? err.message : String(err));
+  }
+
+  async function save(event: Event) {
+    event.preventDefault();
+    if (blocked) return;
+    setBusy(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const patch: { email?: string; password?: string; version: number } = { version: user.version };
+      if (emailChanged) patch.email = email;
+      if (password !== "") patch.password = password;
+      const { user: updated } = await api.updateMe(patch);
+      onUpdated(updated);
+      setPassword("");
+      setConfirm("");
+      setSaved(true);
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.deleteMe(user.version);
+      onDeleted();
+    } catch (err) {
+      fail(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div class="section">
+      <h2>Profile</h2>
+      <form onSubmit={(e) => void save(e)}>
+        <label>
+          Username
+          <input value={user.username} disabled aria-label="Username (read-only)" />
+        </label>
+        <label>
+          Email <span class="hint">(blank to clear)</span>
+          <input
+            type="email"
+            value={email}
+            onInput={(e) => {
+              setEmail(e.currentTarget.value);
+              setSaved(false);
+            }}
+            autocomplete="email"
+          />
+        </label>
+        <label>
+          New password <span class="hint">(leave blank to keep)</span>
+          <input
+            type="password"
+            value={password}
+            onInput={(e) => {
+              setPassword(e.currentTarget.value);
+              setSaved(false);
+            }}
+            autocomplete="new-password"
+            placeholder={`at least ${PASSWORD_MIN_LENGTH} characters`}
+          />
+        </label>
+        {password !== "" && (
+          <label>
+            Repeat new password
+            <input
+              type="password"
+              value={confirm}
+              onInput={(e) => setConfirm(e.currentTarget.value)}
+              autocomplete="new-password"
+            />
+          </label>
+        )}
+        {passwordError !== null && <p class="error">Password: {passwordError}</p>}
+        {mismatch && <p class="error">Passwords don't match.</p>}
+        {error !== null && <p class="error">{error}</p>}
+        {saved && <p class="ok">Saved.</p>}
+        <button type="submit" disabled={blocked}>
+          Save changes
+        </button>
+      </form>
+      <div class="danger">
+        {confirmingDelete ? (
+          <>
+            <span>Permanently delete your account and all todos?</span>
+            <button type="button" class="delete-account" onClick={() => void remove()} disabled={busy}>
+              Delete
+            </button>
+            <button type="button" onClick={() => setConfirmingDelete(false)} disabled={busy}>
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button type="button" class="delete-account" onClick={() => setConfirmingDelete(true)}>
+            Delete account
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TodoScreen({ onLogout }: { onLogout: () => void }) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
@@ -256,12 +495,6 @@ function TodoScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
 
   return (
     <section class="card todos">
-      <header>
-        <h1>todos</h1>
-        <span class="who">
-          {user.username} <button type="button" onClick={onLogout}>Log out</button>
-        </span>
-      </header>
       <form onSubmit={(e) => void add(e)}>
         <input
           class="grow"

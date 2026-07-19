@@ -70,7 +70,8 @@ Full model reference: [`docs/documentations/developer/data-models.md`](docs/docu
 
 | Feature | What it shows | Where |
 |---|---|---|
-| Preact SPA | auth screen + todo list, no router (single view) | `packages/web/src/app.tsx` |
+| Preact SPA + menu bar | top nav (Todos / ⚙ Settings / Log out; Log in / Sign up when out) + state-based views, no router | `packages/web/src/app.tsx` |
+| settings view | Appearance (theme) + Profile edit (email/password, version-guarded) + delete account | `app.tsx` (`SettingsScreen`, `EditProfile`) |
 | typed fetch wrapper | Bearer injection, `{data}` unwrap, problem+json → `ApiError` | `packages/web/src/api.ts` |
 | vite dev proxy | `/v1` → API; port driven by `API_PORT` | `packages/web/vite.config.ts` |
 | client-side validation | shared rules give instant feedback before the round-trip | `app.tsx` (consumes `shared/src/users.ts`) |

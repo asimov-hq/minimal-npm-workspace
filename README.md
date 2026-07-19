@@ -53,6 +53,9 @@ npm run start:server   # fastify serves the built web app AND the API on :3939
 - **Log in:** username + password. Unknown user and wrong password get the same 401.
 - **Per-tab sessions:** the JWT lives in `sessionStorage`, so two tabs can be two users.
 - **Todos:** add with comma-separated tags, toggle, delete; click a tag chip to filter.
+- **Menu bar + Settings:** top nav (Todos · ⚙ Settings · Log out; Log in / Sign up when
+  logged out). Settings holds Appearance (theme) and Profile — edit email/password
+  (version-guarded) or delete your account (cascades your todos).
 - **Themes:** dark (default), light, ocean, forest, volcano, violet northern lights —
   picker top right, persisted in `localStorage`. All styling flows through semantic CSS
   custom properties (`--surface`, `--accent`, …); a unit test fails if a color literal

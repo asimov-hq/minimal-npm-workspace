@@ -59,6 +59,18 @@ export function me(): Promise<{ user: User }> {
   return call("GET", "/v1/me");
 }
 
+export function updateMe(body: {
+  email?: string;
+  password?: string;
+  version: number;
+}): Promise<{ user: User }> {
+  return call("PATCH", "/v1/me", body);
+}
+
+export function deleteMe(version: number): Promise<void> {
+  return call("DELETE", `/v1/me?version=${version}`);
+}
+
 export function listTodos(): Promise<{ todos: Todo[] }> {
   return call("GET", "/v1/todos");
 }

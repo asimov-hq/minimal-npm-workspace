@@ -123,11 +123,11 @@ try {
   await tabC.goto(base);
   await tabC.getByLabel("Username").fill("browser-alice");
   await tabC.getByLabel("Password", { exact: true }).fill("wrong-password");
-  await tabC.getByRole("button", { name: "Log in", exact: true }).last().click();
+  await tabC.locator('button[type="submit"]').click();
   await tabC.getByText("invalid username or password").waitFor();
   ok("wrong password shows API error", true);
   await tabC.getByLabel("Password", { exact: true }).fill("hunter2hunter2");
-  await tabC.getByRole("button", { name: "Log in", exact: true }).last().click();
+  await tabC.locator('button[type="submit"]').click();
   await tabC.getByText("water plants").waitFor();
   ok("login shows existing todos", true);
 
@@ -141,19 +141,31 @@ try {
   await tabC.locator("li.done .title").first().waitFor();
   ok("retry after the conflict reload succeeds", true);
 
-  // themes: dark by default, switchable, persisted per tab's origin storage
+  // menu bar navigation + Settings > Appearance (theme lives here now)
   const activeTheme = () => tabA.evaluate(() => document.documentElement.dataset.theme);
   ok("default theme is dark", (await activeTheme()) === "dark");
+  await tabA.getByRole("button", { name: "Settings" }).click();
   await tabA.getByLabel("Theme").selectOption("northern-lights");
   ok("theme switch applies", (await activeTheme()) === "northern-lights");
+
+  // Settings > Profile: edit email (PATCH /v1/me end to end)
+  await tabA.getByLabel(/Email/).fill("alice@example.com");
+  await tabA.getByRole("button", { name: "Save changes" }).click();
+  await tabA.getByText("Saved.").waitFor();
+  ok("profile email saved", true);
+
+  await tabA.getByRole("button", { name: "Todos" }).click();
+  ok("nav back to todos", await tabA.getByPlaceholder("What needs doing?").isVisible());
+
   await tabA.reload();
-  await tabA.getByText("water plants").waitFor();
+  await tabA.getByPlaceholder("What needs doing?").waitFor();
   ok("theme persists across reload", (await activeTheme()) === "northern-lights");
 
   // logout
   await tabC.getByRole("button", { name: "Log out" }).click();
   await tabC.getByLabel("Username").waitFor();
   ok("logout returns to auth screen", true);
+  ok("menu shows Sign up when logged out", await tabC.getByRole("button", { name: "Sign up" }).isVisible());
 } catch (err) {
   failed = true;
   console.error(err instanceof Error ? err.message : err);
