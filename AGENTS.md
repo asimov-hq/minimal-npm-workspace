@@ -44,6 +44,7 @@ this list — most of it is a scoped find-and-replace the gates will police:
 | `packages/cli/src/` | CLI entry |
 | `docs/plans/` | plans (kaizen style); `docs/sessions/` session notes |
 | `docs/documentations/developer/` | developer docs — start with `data-models.md` |
+| `FEATURES.md` | index of every pattern the scaffold demonstrates → where to find it |
 
 ## Required Verification Order
 

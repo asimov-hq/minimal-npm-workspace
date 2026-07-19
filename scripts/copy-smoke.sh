@@ -21,7 +21,7 @@ for must in AGENTS.md eslint.config.js tsconfig.json tsconfig.dev.json tsconfig.
   fi
 done
 # ... and neither template-local files nor build artifacts
-for mustnot in README.md LICENSE docs node_modules \
+for mustnot in README.md FEATURES.md LICENSE docs node_modules \
                packages/server/dist packages/web/dist packages/web/dist-types \
                data; do
   if [[ -e "$tmp/project/$mustnot" ]]; then

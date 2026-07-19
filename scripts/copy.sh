@@ -51,7 +51,7 @@ fi
 
 # git tracks exactly the template's files, so use it as the single source of
 # truth; only template-local files are excluded (a new project writes its own)
-mapfile -t files < <(git -C "$root_dir" ls-files | grep -v -E '^(docs/|README\.md$|LICENSE$)')
+mapfile -t files < <(git -C "$root_dir" ls-files | grep -v -E '^(docs/|README\.md$|FEATURES\.md$|LICENSE$)')
 
 if [[ ${#files[@]} -eq 0 ]]; then
   echo "Error: 'git ls-files' returned nothing." >&2
